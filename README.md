@@ -1,5 +1,5 @@
 # Projeto Cetus
-![Logo Project](https://github.com/WilsonCazarre/ProjetoCetus/blob/8e97a5340672c6e5e65b45a0ca98b0aed36487bc/assets/logo.jpeg)
+![Cetus Logo](https://github.com/WilsonCazarre/ProjetoCetus/blob/8e97a5340672c6e5e65b45a0ca98b0aed36487bc/assets/logo.jpeg =250x250)
 
 Software para a interface do Projeto Cetus, uma máquina direcionada para
 o processo de Reação de Cadeia Polimerase (PCR).
