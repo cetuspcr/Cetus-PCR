@@ -2,7 +2,7 @@ import tkinter as tk
 import app
 
 std_bg = 'cornsilk2'
-std_bd = 'dark green'
+std_bd = 'RoyalBlue1'
 std_hover = 'Feito com ♥ pelo 3º Mecatrônica (2k19).'
 std_fonttitle = 'Courier New'
 
@@ -79,12 +79,14 @@ class WidgetsPCR:
         self.label_title.pack(side='right',
                               anchor='w',
                               fill='x')
+
         self.label_tree = tk.Label(master=self.frame_titles,
                                    text='Experimentos',
                                    font=('Courier New', '20', 'bold'),
                                    bg=std_bg,
                                    fg=std_bd,
                                    anchor='se')
+
         self.label_tree.pack(side='left',
                              anchor='se',
                              fill='x')
@@ -93,6 +95,7 @@ class WidgetsPCR:
                                height=50,
                                width=50,
                                font='Consolas 14')
+
         self.tree.insert(0, 'Experimento 01')
         self.tree.pack()
 
@@ -106,7 +109,7 @@ class WidgetsPCR:
 
         self.stages_labels = []
         for i in ['Desnaturação:', 'Anelamento:', 'Extensão:',
-                  'Nº de Ciclos:', '°C Inicial:']:
+                  'Nº de Ciclos:', '°C Final:']:
             newlabel = tk.Label(master=self.frame_experimentoptions,
                                 text=i,
                                 font=(std_fonttitle, '25', 'bold'),
