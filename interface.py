@@ -54,6 +54,7 @@ class WidgetsPCR:
                                              highlightthickness=2)
         self.frame_experimenttree.pack(side='left',
                                        anchor='sw')
+        self.frame_experimenttree.pack_propagate(False)
 
         self.frame_experimentoptions = tk.Frame(master=self.master,
                                                 width=700,
@@ -88,8 +89,12 @@ class WidgetsPCR:
                              anchor='se',
                              fill='x')
 
-        self.tree = tk.Listbox(master=self.frame_experimenttree)
-        self.tree.pack(fill='both')
+        self.tree = tk.Listbox(master=self.frame_experimenttree,
+                               height=50,
+                               width=50,
+                               font='Consolas 14')
+        self.tree.insert(0, 'Experimento 01')
+        self.tree.pack()
 
         self.hover_bar = tk.Label(master=self.frame_experimentoptions,
                                   text=std_hover,
