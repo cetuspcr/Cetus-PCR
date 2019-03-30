@@ -1,5 +1,5 @@
 import tkinter as tk
-import app
+import functions
 
 std_bg = 'cornsilk2'
 std_bd = 'RoyalBlue1'
@@ -21,7 +21,7 @@ class MyButton(tk.Button):
 
     @staticmethod
     def hover(new_text):
-        app.application.hover_bar.configure(text=new_text)
+        functions.application.hover_bar.configure(text=new_text)
 
 
 class WidgetsPCR:
@@ -32,7 +32,7 @@ class WidgetsPCR:
         self.master.geometry('1000x660+200+10')
         self.master.config(bg=std_bg)
 
-        # Setup Widgets
+        # Top Widgets Title
         self.frame_titles = tk.Frame(master=self.master,
                                      bg=std_bg,
                                      bd=0,
@@ -43,6 +43,17 @@ class WidgetsPCR:
         self.frame_titles.pack(side='top',
                                fill='x')
 
+        self.label_title = tk.Label(master=self.frame_titles,
+                                    text='Cetus PCR ',
+                                    font=('Courier New', '30', 'bold'),
+                                    bg=std_bg,
+                                    fg=std_bd,
+                                    anchor='e')
+        self.label_title.pack(side='right',
+                              anchor='w',
+                              fill='x')
+
+        # Experiments tree widgets
         self.frame_experimenttree = tk.Frame(master=self.master,
                                              width=300,
                                              height=610,
@@ -55,7 +66,45 @@ class WidgetsPCR:
         self.frame_experimenttree.pack(side='left',
                                        anchor='sw')
         self.frame_experimenttree.pack_propagate(False)
+        self.label_tree = tk.Label(master=self.frame_titles,
+                                   text='Experimentos',
+                                   font=('Courier New', '20', 'bold'),
+                                   bg=std_bg,
+                                   fg=std_bd,
+                                   anchor='se')
 
+        self.label_tree.pack(side='left',
+                             anchor='se',
+                             fill='x')
+
+        self.tree = tk.Listbox(master=self.frame_experimenttree,
+                               height=24,
+                               width=50,
+                               font='Consolas 14')
+
+        self.tree.insert(0, 'Experimento 01')
+        self.tree.pack()
+
+        self.frame_treebottom = tk.Frame(master=self.frame_experimenttree,
+                                         height=30,
+                                         bg='white',
+                                         bd=2,
+                                         relief='groove')
+        self.frame_treebottom.pack(side='bottom', fill='x')
+
+        self.button_add = MyButton(master=self.frame_treebottom,
+                                   hovertext='Adicionar um novo experimento',
+                                   text='+',
+                                   font='Arial 14 bold')
+        self.button_add.pack(side='left')
+
+        self.button_sub = MyButton(master=self.frame_treebottom,
+                                   hovertext='Excluí o experimento selecionado',
+                                   text='-',
+                                   font='Arial 14 bold')
+        self.button_sub.pack(side='left')
+
+        # Experiment options widgets
         self.frame_experimentoptions = tk.Frame(master=self.master,
                                                 width=700,
                                                 height=610,
@@ -69,45 +118,8 @@ class WidgetsPCR:
         self.frame_experimentoptions.pack(fill='both',
                                           expand=True)
         self.frame_experimentoptions.pack_propagate(False)
-
-        self.label_title = tk.Label(master=self.frame_titles,
-                                    text='Cetus PCR ',
-                                    font=('Courier New', '30', 'bold'),
-                                    bg=std_bg,
-                                    fg=std_bd,
-                                    anchor='e')
-        self.label_title.pack(side='right',
-                              anchor='w',
-                              fill='x')
-
-        self.label_tree = tk.Label(master=self.frame_titles,
-                                   text='Experimentos',
-                                   font=('Courier New', '20', 'bold'),
-                                   bg=std_bg,
-                                   fg=std_bd,
-                                   anchor='se')
-
-        self.label_tree.pack(side='left',
-                             anchor='se',
-                             fill='x')
-
-        self.tree = tk.Listbox(master=self.frame_experimenttree,
-                               height=50,
-                               width=50,
-                               font='Consolas 14')
-
-        self.tree.insert(0, 'Experimento 01')
-        self.tree.pack()
-
-        self.hover_bar = tk.Label(master=self.frame_experimentoptions,
-                                  text=std_hover,
-                                  bg='white',
-                                  font='Arial 10 italic',
-                                  anchor='w')
-        self.hover_bar.pack(fill='x',
-                            side='bottom')
-
         self.stages_labels = []
+
         for i in ['Desnaturação:', 'Anelamento:', 'Extensão:',
                   'Nº de Ciclos:', '°C Final:']:
             newlabel = tk.Label(master=self.frame_experimentoptions,
@@ -166,6 +178,12 @@ class WidgetsPCR:
                                  highlightcolor=std_bd,
                                  highlightthickness=2)
 
+        self.button_run = MyButton(master=self.frame_experimentoptions,
+                                   hovertext='Iniciar o experimento selecionado',
+                                   text='INICIAR',
+                                   font='Arial 15 bold')
+        self.button_run.place(x=470, y=325)
+
         self.stages_labels[0].place(x=20, y=20)
         self.entry_stageC1.place(x=50, y=80)
         self.entry_stageT1.place(x=200, y=80)
@@ -184,3 +202,12 @@ class WidgetsPCR:
         self.stages_labels[4].place(x=400, y=140)
         self.entry_temp.place(x=470, y=200)
         self.labelsC[6].place(x=550, y=200)
+
+        # Hover bar
+        self.hover_bar = tk.Label(master=self.frame_experimentoptions,
+                                  text=std_hover,
+                                  bg='white',
+                                  font='Arial 10 italic',
+                                  anchor='w')
+        self.hover_bar.pack(fill='x',
+                            side='bottom')
