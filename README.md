@@ -1,4 +1,5 @@
 # Projeto Cetus
+![Logo Project]
 
 Software para a interface do Projeto Cetus, uma máquina direcionada para
 o processo de Reação de Cadeia Polimerase (PCR).
