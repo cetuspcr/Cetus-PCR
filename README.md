@@ -1,5 +1,5 @@
 # Projeto Cetus
-<img src="https://github.com/WilsonCazarre/ProjetoCetus/blob/8e97a5340672c6e5e65b45a0ca98b0aed36487bc/assets/logo.jpeg" width="200" height="200">
+<img src="https://github.com/WilsonCazarre/ProjetoCetus/blob/master/assets/logo.jpeg" width="200" height="200">
 
 _Esse projeto se encontra nos seus estados mais iniciais de desenvolvimento._
 
