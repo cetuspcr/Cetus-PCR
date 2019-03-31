@@ -23,7 +23,7 @@ class MyButton(tk.Button):
 
     @staticmethod
     def hover(new_text):
-        functions.application.hover_bar.configure(text=new_text)
+        functions.appcetus.hover_bar.configure(text=new_text)
 
 
 class WidgetsPCR:
@@ -116,7 +116,6 @@ class WidgetsPCR:
                                    font='Arial 14 bold')
         self.button_sub.pack(side='left')
         self.img = tk.PhotoImage(file='assets/moon.png').subsample(15, 15)
-        # self.img.subsample(5, 5)
         self.button_darkmode = MyButton(master=self.frame_treebottom,
                                         hovertext='Alterna entre os modos '
                                                   'noturno e padrão',
@@ -174,9 +173,9 @@ class WidgetsPCR:
         self.entry_cycles = tk.Entry(master=self.frame_experimentoptions,
                                      font=('Courier New', '30'),
                                      width=3)
-        self.entry_temp = tk.Entry(master=self.frame_experimentoptions,
-                                   font=('Courier New', '30'),
-                                   width=3)
+        self.entry_ftemp = tk.Entry(master=self.frame_experimentoptions,
+                                    font=('Courier New', '30'),
+                                    width=3)
         self.labelsC = []
 
         for i in range(4):
@@ -207,7 +206,8 @@ class WidgetsPCR:
         self.button_run = MyButton(master=self.frame_experimentoptions,
                                    hovertext='Iniciar o experimento selecionado',
                                    text='INICIAR',
-                                   font='Arial 15 bold')
+                                   font='Arial 15 bold',
+                                   command=functions.experiment)
         self.button_run.place(x=470, y=325)
 
         self.stages_labels[0].place(x=20, y=20)
@@ -226,7 +226,7 @@ class WidgetsPCR:
         self.entry_cycles.place(x=470, y=80)
 
         self.stages_labels[4].place(x=400, y=140)
-        self.entry_temp.place(x=470, y=200)
+        self.entry_ftemp.place(x=470, y=200)
         self.labelsC[6].place(x=550, y=200)
 
         # Hover bar
