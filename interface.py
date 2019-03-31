@@ -3,6 +3,7 @@ import functions
 
 std_bg = '#434343'
 std_bd = '#2ECC71'
+std_label = 'white'
 std_hover = 'Feito com ♥ pelo 3º Mecatrônica (2k19).'
 std_fonttitle = 'Courier New'
 
@@ -57,7 +58,7 @@ class WidgetsPCR:
         self.frame_experimenttree = tk.Frame(master=self.master,
                                              width=300,
                                              height=610,
-                                             bg='white',
+                                             bg=std_label,
                                              bd=0,
                                              relief='groove',
                                              highlightcolor=std_bd,
@@ -87,7 +88,7 @@ class WidgetsPCR:
                                highlightbackground=std_bd,
                                highlightthickness=2,
                                bg=std_bg,
-                               fg='white')
+                               fg=std_label)
 
         self.tree.insert(0, 'Experimento 01')
         self.tree.pack()
@@ -113,6 +114,14 @@ class WidgetsPCR:
                                    font='Arial 14 bold')
         self.button_sub.pack(side='left')
 
+        self.button_darkmode = MyButton(master=self.frame_treebottom,
+                                        hovertext='Alterna entre os modos '
+                                                  'noturno e padrão',
+                                        text='test',
+                                        font='Arial 14 bold',
+                                        command=functions.dark_mode)
+        self.button_darkmode.pack(side='left')
+
         # Experiment options widgets
         self.frame_experimentoptions = tk.Frame(master=self.master,
                                                 width=700,
@@ -135,7 +144,7 @@ class WidgetsPCR:
                                 text=i,
                                 font=(std_fonttitle, '25', 'bold'),
                                 bg=std_bg,
-                                fg='white',
+                                fg=std_label,
                                 anchor='e')
             self.stages_labels.append(newlabel)
 
@@ -170,7 +179,7 @@ class WidgetsPCR:
             newlabel = tk.Label(master=self.frame_experimentoptions,
                                 text='°C',
                                 font=(std_fonttitle, '15', 'bold'),
-                                fg='white',
+                                fg=std_label,
                                 bg=std_bg,
                                 anchor='e')
             self.labelsC.append(newlabel)
@@ -178,7 +187,7 @@ class WidgetsPCR:
             newlabel = tk.Label(master=self.frame_experimentoptions,
                                 text='Seg',
                                 font=(std_fonttitle, '15', 'bold'),
-                                fg='white',
+                                fg=std_label,
                                 bg=std_bg,
                                 anchor='e')
             newlabel.place(x=280, y=positons[i])
