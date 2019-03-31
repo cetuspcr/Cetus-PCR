@@ -1,8 +1,8 @@
 import tkinter as tk
 import functions
 
-std_bg = 'cornsilk2'
-std_bd = 'RoyalBlue1'
+std_bg = '#434343'
+std_bd = '#2ECC71'
 std_hover = 'Feito com ♥ pelo 3º Mecatrônica (2k19).'
 std_fonttitle = 'Courier New'
 
@@ -80,7 +80,14 @@ class WidgetsPCR:
         self.tree = tk.Listbox(master=self.frame_experimenttree,
                                height=24,
                                width=50,
-                               font='Consolas 14')
+                               font='Consolas 14',
+                               bd=0,
+                               relief='groove',
+                               highlightcolor=std_bd,
+                               highlightbackground=std_bd,
+                               highlightthickness=2,
+                               bg=std_bg,
+                               fg='white')
 
         self.tree.insert(0, 'Experimento 01')
         self.tree.pack()
@@ -95,12 +102,14 @@ class WidgetsPCR:
         self.button_add = MyButton(master=self.frame_treebottom,
                                    hovertext='Adicionar um novo experimento',
                                    text='+',
+                                   fg='green',
                                    font='Arial 14 bold')
         self.button_add.pack(side='left')
 
         self.button_sub = MyButton(master=self.frame_treebottom,
                                    hovertext='Excluí o experimento selecionado',
                                    text='-',
+                                   fg='red',
                                    font='Arial 14 bold')
         self.button_sub.pack(side='left')
 
@@ -126,6 +135,7 @@ class WidgetsPCR:
                                 text=i,
                                 font=(std_fonttitle, '25', 'bold'),
                                 bg=std_bg,
+                                fg='white',
                                 anchor='e')
             self.stages_labels.append(newlabel)
 
@@ -160,6 +170,7 @@ class WidgetsPCR:
             newlabel = tk.Label(master=self.frame_experimentoptions,
                                 text='°C',
                                 font=(std_fonttitle, '15', 'bold'),
+                                fg='white',
                                 bg=std_bg,
                                 anchor='e')
             self.labelsC.append(newlabel)
@@ -167,6 +178,7 @@ class WidgetsPCR:
             newlabel = tk.Label(master=self.frame_experimentoptions,
                                 text='Seg',
                                 font=(std_fonttitle, '15', 'bold'),
+                                fg='white',
                                 bg=std_bg,
                                 anchor='e')
             newlabel.place(x=280, y=positons[i])
