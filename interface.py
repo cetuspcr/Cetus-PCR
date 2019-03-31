@@ -6,6 +6,7 @@ std_bd = '#2ECC71'
 std_label = 'white'
 std_hover = 'Feito com ♥ pelo 3º Mecatrônica (2k19).'
 std_fonttitle = 'Courier New'
+icon = 'assets/cetusico.ico'
 
 
 class MyButton(tk.Button):
@@ -32,6 +33,7 @@ class WidgetsPCR:
         self.master.title('Cetus PCR')
         self.master.geometry('1000x660+200+10')
         self.master.config(bg=std_bg)
+        self.master.iconbitmap(icon)
 
         # Top Widgets Title
         self.frame_titles = tk.Frame(master=self.master,
@@ -113,13 +115,16 @@ class WidgetsPCR:
                                    fg='red',
                                    font='Arial 14 bold')
         self.button_sub.pack(side='left')
-
+        self.img = tk.PhotoImage(file='assets/moon.png').subsample(15, 15)
+        # self.img.subsample(5, 5)
         self.button_darkmode = MyButton(master=self.frame_treebottom,
                                         hovertext='Alterna entre os modos '
                                                   'noturno e padrão',
-                                        text='test',
+                                        image=self.img,
+                                        text='a',
                                         font='Arial 14 bold',
                                         command=functions.dark_mode)
+
         self.button_darkmode.pack(side='left')
 
         # Experiment options widgets
