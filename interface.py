@@ -10,8 +10,8 @@ icon = 'assets/cetusico.ico'
 
 
 class MyButton(tk.Button):
-    def __init__(self, master=None, hovertext=None, cnf={}, **kw):
-        tk.Button.__init__(self, master=master, cnf=cnf, **kw)
+    def __init__(self, master=None, hovertext=None, **kw):
+        tk.Button.__init__(self, master=master, **kw)
         self.configure(relief='groove',
                        highlightcolor=std_bd,
                        highlightbackground=std_bd,
