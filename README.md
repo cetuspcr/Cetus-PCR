@@ -7,7 +7,7 @@ O Projeto Cetus tem como proposta desenvolver uma máquina PCR de baixo custo (t
 
 ## Já existem outros Termocicladores no mercado, por que desenvolver outro?
 
-O objetivo do projeto é auxiliar pequenos grupos de pesquisa e empresas pequenas de biotecnologia a ter acesso a um dispositivo que atualmente possuí um custo extremamente elevado no mercado. Grade parte desse custo está relacionado ao fato de não existir um bom investimento na produção nacional do equipamento, elevando seu custo por conta da exportação.
+O objetivo do projeto é auxiliar pequenos grupos de pesquisa e empresas pequenas de biotecnologia a ter acesso a um dispositivo que atualmente possuí um custo extremamente elevado no mercado. Grande parte desse custo está relacionado ao fato de não existir um bom investimento na produção nacional do equipamento, fazendo com que exista um elevado custo de exportação.
 
 ## Toda ajuda é bem-vinda
 
