@@ -17,12 +17,12 @@ https://docs.google.com/forms/d/1ex0j7108DEeMFs5fmkvnsLnFZ41qZkHM9fczb70snag/edi
 Para dúvidas e/ou sugestões sobre o projeto:
 Contatos
 - Wilson Cazarré:
-Email - wcs0486@gmail.com
-Twitter - @WilsonCazarre
+Email: wcs0486@gmail.com
+Twitter: @WilsonCazarre
 
 - Lucas Felipe:
-Email - outrolucas2002@gmail.com
-Twitter - @LukaxFeh
+Email: outrolucas2002@gmail.com
+Twitter: @LukaxFeh
 
 # Notas de desenvolvimento
 Estruturalmente, a máquina é composta por uma pastilha peltier (entre outros dispositivos para auxiliar no resfriamento) controlada por um microcontrolador ATmega302P, o qual é comandado por um software no computador.
