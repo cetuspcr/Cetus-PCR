@@ -103,7 +103,7 @@ class WidgetsPCR:
         self.frame_treebottom.pack(side='bottom', fill='x')
 
         self.button_add = StdButton(master=self.frame_treebottom,
-                                    hovertext='Adicionar um novo experimento',
+                                    hovertext='Adiciona um novo experimento',
                                     text='+',
                                     fg='green',
                                     font='Arial 14 bold',
@@ -111,7 +111,7 @@ class WidgetsPCR:
         self.button_add.pack(side='left')
 
         self.button_sub = StdButton(master=self.frame_treebottom,
-                                    hovertext='Excluí o experimento selecionado',
+                                    hovertext='Exclui o experimento selecionado',
                                     text='-',
                                     fg='red',
                                     font='Arial 14 bold')
@@ -207,7 +207,7 @@ class WidgetsPCR:
                                  highlightthickness=2)
 
         self.button_run = StdButton(master=self.frame_experimentoptions,
-                                    hovertext='Iniciar o experimento selecionado',
+                                    hovertext='Inicia o experimento selecionado',
                                     text='INICIAR',
                                     # command=functions.experiment,
                                     font='Arial 15 bold'
