@@ -11,6 +11,31 @@ serialport = 'COM4'
 path_experiments = 'experiments'
 
 
+class Experiment:
+    def __init__(self):
+        self.name = None
+
+
+    def _generate(self):
+        """Internal function.
+
+        Define the attributes of experiment by reading the entry boxes in
+        main window.
+        """
+        self.number_of_cycles = appcetus.entry_cycles.get()
+        self.denaturing_temperature = appcetus.entry_stageC1.get()
+        self.denaturing_time = appcetus.entry_stageT1.get()
+        self.annealing_temperature = appcetus.entry_stageC2.get()
+        self.annealing_time = appcetus.entry_stageT2.get()
+        self.extension_temperature = appcetus.entry_stageC3.get()
+        self.extension_time = appcetus.entry_stageT3.get()
+        self.final_temperature = appcetus.entry_ftemp.get()
+
+    def save(self):
+        self._generate()
+
+
+
 def dark_mode():
     restart = tkinter.messagebox.askokcancel('Reinicío Necessário',
                                              'É necessário reiniciar o '
@@ -65,10 +90,12 @@ def dark_mode():
 #     print(s_port.readlines())
 
 def open_experiments():
-    global experiments
+    global experiments, list_experiments
+    list_experiments = []
     experiments = os.listdir(path_experiments)
     for exp in experiments:
         if exp.endswith('.exp'):
+            list_experiments.append(exp)
             exp = exp[:-4]
             appcetus.tree.insert(0, exp)
 

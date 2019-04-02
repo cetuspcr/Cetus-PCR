@@ -34,6 +34,7 @@ class WidgetsPCR:
         self.master.geometry('1000x660+200+10')
         self.master.config(bg=std_bg)
         self.master.iconbitmap(icon)
+        self.master.resizable(False, False)
 
         # Top Widgets Title
         self.frame_titles = tk.Frame(master=self.master,
@@ -105,7 +106,8 @@ class WidgetsPCR:
                                     hovertext='Adicionar um novo experimento',
                                     text='+',
                                     fg='green',
-                                    font='Arial 14 bold')
+                                    font='Arial 14 bold',
+                                    command=lambda: NewExperimentWindow(tk.Toplevel()))
         self.button_add.pack(side='left')
 
         self.button_sub = StdButton(master=self.frame_treebottom,
@@ -239,3 +241,43 @@ class WidgetsPCR:
                                   anchor='w')
         self.hover_bar.pack(fill='x',
                             side='bottom')
+
+
+class NewExperimentWindow:
+    def __init__(self, master: tk.Toplevel):
+        # Setup Master
+        self.master = master
+        self.master.geometry('215x90')
+        self.master.iconbitmap(icon)
+        self.master.configure(bg=std_bg)
+        self.master.resizable(False, False)
+
+        self.frame1 = tk.Frame(master=self.master,
+                               width=300,
+                               height=200,
+                               bg=std_bg,
+                               bd=0,
+                               relief='groove',
+                               highlightcolor=std_bd,
+                               highlightbackground=std_bd,
+                               highlightthickness=2)
+        self.frame1.pack(fill='both')
+        self.frame1.pack_propagate(False)
+
+        self.entry_label = tk.Label(master=self.frame1,
+                                    text='Nome do experimento:',
+                                    font=(std_fonttitle, 11, 'bold'),
+                                    bg=std_bg,
+                                    fg=std_label,
+                                    anchor='nw')
+        self.entry_label.place(x=10, y=5)
+
+        self.entry_name = tk.Entry(master=self.frame1,
+                                   width=23)
+        self.entry_name.place(x=10, y=33)
+
+        self.confirm_button = StdButton(master=self.frame1,
+                                        text='Criar')
+        self.confirm_button.place(x=155, y=30)
+
+
