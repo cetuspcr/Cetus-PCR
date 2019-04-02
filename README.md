@@ -5,6 +5,11 @@ _Esse projeto se encontra nos seus estados mais iniciais de desenvolvimento._
 
 O Projeto Cetus tem como proposta desenvolver uma máquina PCR de baixo custo (também chamado de Termociclador). A elaboração está sendo feita por alunos do 3° Mecatrônica Integrado ao Ensino Médio da ETEC Presidente Vargas como proposta para o Trabalho de Conclusão de Curso (TCC).
 
+### Contribuidores do Projeto
+Todos os integrantes do nosso grupo são participantes do 3° ano de Mecatrônica (2019) na ETEC Presidente Vargas. 
+
+São eles: Joice Iris, Kleber Kato, Letícia Araújo, Lucas Souza, Vinicius Maehara e Wilson Cazarré.
+
 ## Por que Cetus?
 
 O processo PCR foi desenvolvido em 1983, por Kary Mullis, junto de uma equipe de funcionários da Cetus Corporation, - uma empresa pioneira em biotecnologia e principal desenvolvedora de técnicas para amplificação de DNA, - os quais receberam o Nobel de química por tal invento. Cetus também é uma constelação equatorial que representa uma criatura marinha, sendo o logo do projeto sua representação astrológica.
