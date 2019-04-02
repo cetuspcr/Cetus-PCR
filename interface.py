@@ -92,7 +92,6 @@ class WidgetsPCR:
                                bg=std_bg,
                                fg=std_label)
 
-        self.tree.insert(0, 'Experimento 01')
         self.tree.pack()
 
         self.frame_treebottom = tk.Frame(master=self.frame_experimenttree,
@@ -115,13 +114,15 @@ class WidgetsPCR:
                                     fg='red',
                                     font='Arial 14 bold')
         self.button_sub.pack(side='left')
-        self.img = tk.PhotoImage(file='assets/moon.png').subsample(15, 15)
+        self.img = tk.PhotoImage(file='assets/moon.png').subsample(20, 20)
         self.button_darkmode = StdButton(master=self.frame_treebottom,
                                          hovertext='Alterna entre os modos '
                                                   'noturno e padrão',
                                          image=self.img,
                                          text='a',
                                          font='Arial 14 bold',
+                                         width=30,
+                                         height=35,
                                          command=functions.dark_mode)
 
         self.button_darkmode.pack(side='left')

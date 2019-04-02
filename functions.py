@@ -1,9 +1,14 @@
+import os
+import pickle
 import tkinter as tk
 import tkinter.messagebox
+
 # import serial
+
 import interface
 
 serialport = 'COM4'
+path_experiments = 'experiments'
 
 
 def dark_mode():
@@ -14,7 +19,7 @@ def dark_mode():
     if restart:
         if interface.std_label == 'white':
             interface.std_label = 'black'
-            interface.std_bd = 'RoyalBlue2'
+            interface.std_bd = 'SpringGreen4'
             interface.std_bg = 'Cornsilk2'
         else:
             interface.std_bg = '#434343'
@@ -59,10 +64,17 @@ def dark_mode():
 #
 #     print(s_port.readlines())
 
+def open_experiments():
+    global experiments
+    experiments = os.listdir(path_experiments)
+    for exp in experiments:
+        if exp.endswith('.exp'):
+            exp = exp[:-4]
+            appcetus.tree.insert(0, exp)
+
 
 def build():
     global root, appcetus, s_port
     # s_port = serial.Serial(serialport, 9600, timeout=1)
     root = tk.Tk()
     appcetus = interface.WidgetsPCR(root)
-    root.mainloop()
