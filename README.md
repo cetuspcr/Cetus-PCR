@@ -11,7 +11,7 @@ O objetivo do projeto é auxiliar pequenos grupos de pesquisa e empresas pequena
 
 ## Toda ajuda é bem-vinda
 
-Por se tratar de um projeto desenvolvido por alunos do ensino médio (com ensino técnico em mecatrônica) estamos necessitados de pessoas com conhecimento na área principalmente na área da pesquisa, você pode nos ajudar apenas preenchendo um simples questionário:
+Por se tratar de um projeto desenvolvido por alunos do ensino médio (com ensino técnico em mecatrônica) estamos necessitados de pessoas com conhecimento principalmente na área da pesquisa em DNA e processos PCR, você pode nos ajudar apenas preenchendo um simples questionário:
 https://docs.google.com/forms/d/1ex0j7108DEeMFs5fmkvnsLnFZ41qZkHM9fczb70snag/edit?usp=sharing
 
 ### Para dúvidas e/ou sugestões sobre o projeto:
