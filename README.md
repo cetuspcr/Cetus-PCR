@@ -5,9 +5,13 @@ _Esse projeto se encontra nos seus estados mais iniciais de desenvolvimento._
 
 O Projeto Cetus tem como proposta desenvolver uma máquina PCR de baixo custo (também chamado de Termociclador). A elaboração está sendo feita por alunos do 3° Mecatrônica Integrado ao Ensino Médio da ETEC Presidente Vargas como proposta para o Trabalho de Conclusão de Curso (TCC).
 
+## Por que Cetus?
+
+O processo PCR foi desenvolvido em 1983, por Kary Mullis, junto de uma equipe de funcionários da Cetus Corporation - uma empresa pioneira em biotecnologia e principal desenvolvedora de técnicas para amplificação de DNA.
+
 ## Já existem outros Termocicladores no mercado, por que desenvolver outro?
 
-O objetivo do projeto é auxiliar pequenos grupos de pesquisa e empresas pequenas de biotecnologia a ter acesso a um dispositivo que atualmente possuí um custo extremamente elevado no mercado. Grande parte desse custo está relacionado ao fato de não existir um bom investimento na produção nacional do equipamento, fazendo com que exista um elevado custo de exportação.
+O objetivo do projeto é auxiliar pequenos grupos de pesquisa, empresas pequenas de biotecnologia e alunos da área a ter acesso a um dispositivo que atualmente possuí um custo extremamente elevado no mercado. Grande parte desse custo está relacionado ao fato de não existir um bom investimento na produção nacional do equipamento, fazendo com que exista um elevado custo de exportação.
 
 ## Toda ajuda é bem-vinda
 
@@ -25,6 +29,7 @@ Contatos:
 - Lucas Felipe:
   - Email: outrolucas2002@gmail.com
   - [Twitter](https://twitter.com/lukaxfeh)
+
 
 ## Notas de desenvolvimento
 Estruturalmente, a máquina é composta por uma pastilha peltier (entre outros dispositivos para auxiliar no resfriamento) controlada por um microcontrolador ATmega302P, o qual é comandado por um software no computador.
