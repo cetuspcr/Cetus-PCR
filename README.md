@@ -15,13 +15,20 @@ Por se tratar de um projeto desenvolvido por alunos do ensino médio (com ensino
 https://docs.google.com/forms/d/1ex0j7108DEeMFs5fmkvnsLnFZ41qZkHM9fczb70snag/edit?usp=sharing
 
 Para dúvidas e/ou sugestões sobre o projeto:
-Contatos
-- Wilson Cazarré:
+
+Contatos:
+
+Wilson Cazarré: 
+
 Email: wcs0486@gmail.com
+
 Twitter: @WilsonCazarre
 
-- Lucas Felipe:
+
+Lucas Felipe:
+
 Email: outrolucas2002@gmail.com
+
 Twitter: @LukaxFeh
 
 # Notas de desenvolvimento
