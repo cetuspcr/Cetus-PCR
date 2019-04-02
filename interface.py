@@ -9,7 +9,7 @@ std_fonttitle = 'Courier New'
 icon = 'assets/cetusico.ico'
 
 
-class MyButton(tk.Button):
+class StdButton(tk.Button):
     def __init__(self, master=None, hovertext=None, **kw):
         tk.Button.__init__(self, master=master, **kw)
         self.configure(relief='groove',
@@ -102,27 +102,27 @@ class WidgetsPCR:
                                          relief='groove')
         self.frame_treebottom.pack(side='bottom', fill='x')
 
-        self.button_add = MyButton(master=self.frame_treebottom,
-                                   hovertext='Adicionar um novo experimento',
-                                   text='+',
-                                   fg='green',
-                                   font='Arial 14 bold')
+        self.button_add = StdButton(master=self.frame_treebottom,
+                                    hovertext='Adicionar um novo experimento',
+                                    text='+',
+                                    fg='green',
+                                    font='Arial 14 bold')
         self.button_add.pack(side='left')
 
-        self.button_sub = MyButton(master=self.frame_treebottom,
-                                   hovertext='Excluí o experimento selecionado',
-                                   text='-',
-                                   fg='red',
-                                   font='Arial 14 bold')
+        self.button_sub = StdButton(master=self.frame_treebottom,
+                                    hovertext='Excluí o experimento selecionado',
+                                    text='-',
+                                    fg='red',
+                                    font='Arial 14 bold')
         self.button_sub.pack(side='left')
         self.img = tk.PhotoImage(file='assets/moon.png').subsample(15, 15)
-        self.button_darkmode = MyButton(master=self.frame_treebottom,
-                                        hovertext='Alterna entre os modos '
+        self.button_darkmode = StdButton(master=self.frame_treebottom,
+                                         hovertext='Alterna entre os modos '
                                                   'noturno e padrão',
-                                        image=self.img,
-                                        text='a',
-                                        font='Arial 14 bold',
-                                        command=functions.dark_mode)
+                                         image=self.img,
+                                         text='a',
+                                         font='Arial 14 bold',
+                                         command=functions.dark_mode)
 
         self.button_darkmode.pack(side='left')
 
@@ -203,11 +203,12 @@ class WidgetsPCR:
                                  highlightcolor=std_bd,
                                  highlightthickness=2)
 
-        self.button_run = MyButton(master=self.frame_experimentoptions,
-                                   hovertext='Iniciar o experimento selecionado',
-                                   text='INICIAR',
-                                   font='Arial 15 bold',
-                                   command=functions.experiment)
+        self.button_run = StdButton(master=self.frame_experimentoptions,
+                                    hovertext='Iniciar o experimento selecionado',
+                                    text='INICIAR',
+                                    # command=functions.experiment,
+                                    font='Arial 15 bold'
+                                    )
         self.button_run.place(x=470, y=325)
 
         self.stages_labels[0].place(x=20, y=20)
