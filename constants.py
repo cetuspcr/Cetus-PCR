@@ -1,6 +1,6 @@
 bg = '#434343'
 bd = '#2ECC71'
-bd_width = 2
+bd_width = 3
 relief = 'groove'
 label_color = 'white'
 icon = 'assets/cetus.ico'

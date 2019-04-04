@@ -20,34 +20,57 @@ class CetusPCR(tk.Frame):
                        highlightbackground=std.bd,
                        highlightthickness=std.bd_width)
 
-        self.fr_title = tk.Frame(master=self,
-                                 height=100)
+        self.options_frame = tk.Frame(master=self,
+                                      width=250,
+                                      height=200,
+                                      bg=std.bg,
+                                      bd=0,
+                                      relief=std.relief,
+                                      highlightcolor=std.bd,
+                                      highlightbackground=std.bd,
+                                      highlightthickness=std.bd_width)
 
-        self.experiment_box = ttk.Combobox(master=self,
-                                           width=25,
-                                           font=(std.font_title, 20))
-        self.experiment_box_title = tk.Label(master=self,
-                                             font=(std.font_title, 25, 'bold'),
-                                             text='Selecione o experimento:',
-                                             fg=std.label_color,
-                                             bg=std.bg)
-        self.button_confirm = tk.Button(master=self,
-                                        font=(std.font_buttons, 15, 'bold'),
-                                        text='CORRER',
-                                        relief=std.relief)
+        self.options_box_title = tk.Label(master=self,
+                                          text='Opções',
+                                          font=(std.font_title, 13, 'bold'),
+                                          bg=std.bg,
+                                          fg=std.label_color,
+                                          width=7)
+        self.buttons = {}
+        for but in ('Abrir', 'Novo', 'Excluir'):
+            self.buttons[but] = tk.Button(master=self.options_frame,
+                                          font=(std.font_buttons, 13, 'bold'),
+                                          text=but,
+                                          relief=std.relief,
+                                          width=8,
+                                          height=0)
+            self.buttons[but].pack(pady=14)
 
-        self.button_confirm.place(relx=0.5,
-                                  rely=0.5,
-                                  anchor='center')
+        self.experiment_combo = ttk.Combobox(master=self,
+                                             width=25,
+                                             font=(std.font_title, 20),
+                                             values=['Experimento 01'])
 
-        self.experiment_box.place(in_=self.button_confirm,
-                                  anchor='s',
-                                  relx=0.5,
-                                  y=-1,
-                                  bordermode='outside')
+        self.experiment_combo_title = tk.Label(master=self,
+                                               font=(std.font_title, 25, 'bold'),
+                                               text='Selecione o experimento:',
+                                               fg=std.label_color,
+                                               bg=std.bg)
 
-        self.experiment_box_title.place(in_=self.experiment_box,
-                                        relx=0.5,
-                                        anchor='s',
-                                        bordermode='outside')
+        self.options_frame.place(rely=0.45,
+                                 relx=0.75,
+                                 anchor='center')
+        self.options_frame.pack_propagate(False)
+        self.options_box_title.place(in_=self.options_frame,
+                                     bordermode='outside',
+                                     relx=0.05,
+                                     y=-10)
 
+        self.experiment_combo.place(relx=0.35,
+                                    rely=0.47,
+                                    anchor='center')
+
+        self.experiment_combo_title.place(in_=self.experiment_combo,
+                                          relx=0.5,
+                                          anchor='s',
+                                          bordermode='outside')
