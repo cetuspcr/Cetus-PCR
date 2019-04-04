@@ -20,7 +20,7 @@ PCR (Polymerase Chain Reaction - Reação em Cadeia Polimerase) é uma técnica 
 
 ## Já existem outros Termocicladores no mercado, por que desenvolver mais um?
 
-O objetivo do projeto é auxiliar pequenos grupos de pesquisa, empresas pequenas de biotecnologia e alunos da área a ter acesso a um dispositivo que atualmente possuí um custo extremamente elevado no mercado. Grande parte desse custo está relacionado ao fato de não existir um bom investimento na produção nacional do equipamento, fazendo com que exista um elevado custo de exportação.
+O objetivo do projeto é auxiliar pequenos grupos de pesquisa, empresas pequenas de biotecnologia e alunos da área a ter acesso a um dispositivo que atualmente possuí um custo extremamente elevado no mercado. Grande parte desse custo está relacionado ao fato de não existir um bom investimento na produção nacional do equipamento, fazendo com que exista um elevado custo de importação.
 
 
 ## Toda ajuda é bem-vinda
