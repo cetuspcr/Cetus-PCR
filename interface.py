@@ -50,3 +50,4 @@ class CetusPCR(tk.Frame):
                                         relx=0.5,
                                         anchor='s',
                                         bordermode='outside')
+
