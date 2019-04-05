@@ -8,7 +8,8 @@ class ExperimentPCR -> Edita/Executa o experimento selecionado;
 
 Todas as classes de janelas herdadas da biblioteca tk.Frame.
 Isso é feito apenas por propósitos de design,
-uma vez que facilita a colocação das bordas e organização dos widgets dentro da janela.
+uma vez que facilita a colocação das bordas e organização dos widgets dentro da
+janela.
 """
 
 import tkinter as tk
@@ -21,7 +22,6 @@ class CetusPCR(tk.Frame):
 
     Nessa janela o usuário pode selecionar, deletar ou criar um experimento.
     """
-
     def __init__(self, master: tk.Tk):
         super().__init__(master)
         self.master = master
@@ -43,10 +43,10 @@ class CetusPCR(tk.Frame):
         """Cria os widgets da janela.
 
         A razão para qual os widgets são colocador em outro método é que essa classe
-        será futuramente herdada pela janela ExperimentPCR e não é suposta  para
+        será futuramente herdada pela janela ExperimentPCR e não é suposta  para\
         copiar todos os widgets para outra janela, apenas as opções de quadro.
         """
-        # Create widgets
+        # Criar os widgets
         self.options_frame = tk.Frame(master=self,
                                       width=250,
                                       height=200,
@@ -64,7 +64,7 @@ class CetusPCR(tk.Frame):
                                           fg=std.label_color,
                                           width=7)
         self.buttons = {}
-        # Create and place 3 buttons on the options_frame
+        # Criar e posicionar 3 botões dentro do "options_frame"
         for but in ('Abrir', 'Novo', 'Excluir'):
             self.buttons[but] = tk.Button(master=self.options_frame,
                                           font=(std.font_buttons, 13, 'bold'),
@@ -85,7 +85,7 @@ class CetusPCR(tk.Frame):
                                                fg=std.label_color,
                                                bg=std.bg)
 
-        # Place widgets (buttons not included)
+        # Posicionar os widgets(botões não incluídos)
         self.options_frame.place(rely=0.45,
                                  relx=0.75,
                                  anchor='center')
@@ -131,9 +131,9 @@ class ExperimentPCR(CetusPCR):
     def _widgets(self):
         self.entry_of_options = {}
         self.entry_labels = {}
-        gapy = 20
+        self.gapy = 20
         for stage in ('Desnaturação', 'Anelamento', 'Extensão'):
-            gapx = 20
+            self.gapx = 20
             for option in ('Temperatura', 'Tempo'):
                 entry = tk.Entry(master=self,
                                  font=(std.font_title, 30),
@@ -145,10 +145,10 @@ class ExperimentPCR(CetusPCR):
                 self.entry_of_options[key] = entry
                 entry.place(relx=0.2,
                             rely=0.2,
-                            x=gapx,
-                            y=gapy,
+                            x=self.gapx,
+                            y=self.gapy,
                             anchor='ne')
-                gapx += 150
+                self.gapx += 150
                 if option == 'Temperatura':
                     text = '°C'
                 else:
@@ -160,10 +160,9 @@ class ExperimentPCR(CetusPCR):
                                       font=(std.font_title, 14, 'bold'))
                 unit_label.place(in_=entry,
                                  relx=1,
-
                                  rely=0,
                                  x=10)
-            gapy += 120
+            self.gapy += 120
             label = tk.Label(master=self,
                              font=(std.font_title, 20, 'bold'),
                              text=stage+':',
@@ -175,7 +174,7 @@ class ExperimentPCR(CetusPCR):
                         y=-10,
                         bordermode='outside')
 
-        gapy = 20
+        self.gapy = 20
         for option in ('Nº de ciclos', 'Temperatura Final'):
             key = 'Entry- ' + option
             entry = tk.Entry(master=self,
@@ -186,8 +185,8 @@ class ExperimentPCR(CetusPCR):
                              highlightthickness=std.bd_width)
             entry.place(relx=0.7,
                         rely=0.2,
-                        y=gapy)
-            gapy += 120
+                        y=self.gapy)
+            self.gapy += 120
             self.entry_of_options[key] = entry
 
             key = 'Label- ' + option
@@ -201,9 +200,49 @@ class ExperimentPCR(CetusPCR):
                         relx=0.5,
                         y=-10)
             self.entry_of_options[key] = label
+            if option == 'Temperatura Final':
+                unit_label = tk.Label(master=self,
+                                      font=(std.font_title, 14, 'bold'),
+                                      text='°C',
+                                      bg=std.bg,
+                                      fg=std.label_color)
+                unit_label.place(in_=entry,
+                                 # anchor='ne',
+                                 relx=1,
+                                 rely=0,
+                                 x=10)
 
-        self.button_run = tk.Button(master=self,
-                                    text='Iniciar',
-                                    font=(std.font_buttons, 20))
-        for i in self.entry_of_options:
-            print(i)
+        self.buttons_frame = tk.Frame(master=self,
+                                      width=250,
+                                      height=100,
+                                      bg=std.bg,
+                                      bd=0,
+                                      relief=std.relief,
+                                      highlightcolor=std.bd,
+                                      highlightbackground=std.bd,
+                                      highlightthickness=std.bd_width)
+        self.buttons_frame.place(in_=self.entry_of_options['Entry- Temperatura Final'],
+                                 anchor='n',
+                                 relx=0.5,
+                                 rely=1,
+                                 y=50)
+        self.buttons_frame_title = tk.Label(master=self,
+                                            text='Opções',
+                                            font=(std.font_title, 13, 'bold'),
+                                            bg=std.bg,
+                                            fg=std.label_color,
+                                            width=7)
+        self.buttons_frame_title.place(in_=self.buttons_frame,
+                                       bordermode='outside',
+                                       relx=0.05,
+                                       y=-10)
+        self.buttons_frame.pack_propagate(False)
+
+        self.buttons = {}
+        for but in ('Editar', 'Executar'):
+            self.buttons[but] = tk.Button(master=self.buttons_frame,
+                                          text=but,
+                                          width=7,
+                                          font=(std.font_buttons, 15))
+            self.buttons[but].pack(side='left',
+                                   padx=17)
