@@ -1,14 +1,14 @@
-"""Design for Cetus PCR application.
+"""Design para o aplicativo Cetus PCR.
 
-"Interface" hold all the information about the widgets of application.
+"Interface" armazena todas as informações sobre os widgets do aplicativo.
 
-The main structure of the program is the based onto this two main classes:
-class CetusPCR -> Select/Create an experiment
-class ExperimentPCR -> Edit/Run the selected experiment.
+A estrutura principal do programa é baseada principalmente nessas duas classes:
+class CetusPCR -> Seleciona/Cria um experimento;
+class ExperimentPCR -> Edita/Executa o experimento selecionado;
 
-All window classes is inheriting from tk.Frame.
-This is just por design purposes since is easier to put a border and organize
-widgets inside a frame.
+Todas as classes de janelas herdadas da biblioteca tk.Frame.
+Isso é feito apenas por propósitos de design,
+uma vez que facilita a colocação das bordas e organização dos widgets dentro da janela.
 """
 
 import tkinter as tk
@@ -17,9 +17,9 @@ import constants as std
 
 
 class CetusPCR(tk.Frame):
-    """First window of the application.
+    """Primeira janela do aplicativo.
 
-    In this window user can select, delete or create a new experiment.
+    Nessa janela o usuário pode selecionar, deletar ou criar um experimento.
     """
 
     def __init__(self, master: tk.Tk):
@@ -39,12 +39,11 @@ class CetusPCR(tk.Frame):
                        highlightthickness=std.bd_width)
 
     def _widgets(self):
-        """Create the widgets of window.
+        """Cria os widgets da janela.
 
-        The reason for the widgets been placed in another method, is because
-        this class will be further inherited by ExperimentPCR window and wasn't
-        supposed to copy all the widgets to another window, just the frame
-        options.
+        A razão para qual os widgets são colocador em outro método é que essa classe
+        será futuramente herdada pela janela ExperimentPCR e não é suposta  para
+        copiar todos os widgets para outra janela, apenas as opções de quadro.
         """
         self.options_frame = tk.Frame(master=self,
                                       width=250,
@@ -104,22 +103,22 @@ class CetusPCR(tk.Frame):
 
 
 class ExperimentPCR(CetusPCR):
-    """Handle the experiment given by CetusPCR window.
+    """Lida com o experimento dado pela janela CetusPCR.
 
-    This window is composed by some tk.Entry widgets.
-    The state of their are defined by the instruction given by the user in the
-    previous window:
+    Essa janela é composto por alguns widgets da classe tk.Entry.
+    Seu estado é definido pelas instruções dadas pelo usuário
+    na janela anterior.
 
-    Open -> Entry widgets are disabled and with experiment options inside.
-    New -> Entry widgets are enabled and empty.
+    Abrir -> Widgets de entrada são desabilitados com as opções do experimento dentro deles.
+    Novo -> Widgets de entrada são habilitados e esvaziados.
 
-    If the user choice the Open option, it still be able to activate the Entry
-    by pressing the Edit button.
+    Se o usuário escolher a opção Abrir, ainda é possivel
+    ativar os widgets de entrada pressionando o botão Editar.
 
-    Inherit from Cetus PCR create automatically a window with the same frame
-    configurations.
-    This is useful since the windows should look the same in the title, icon
-    and size. But their widgets and options are different.
+    Herdar do CetusPCR cria automaticamente uma janela
+    com as mesmas configurações de quadro.
+    Isso é util pois a janela deve ter a mesma aparência, título, ícone e tamanho,
+    porém, com widgets e opções diferentes.
     """
     def __init__(self, master: tk.Toplevel):
         super().__init__(master)
