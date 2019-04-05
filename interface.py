@@ -141,14 +141,14 @@ class ExperimentPCR(CetusPCR):
                                  bd=1,
                                  highlightcolor=std.bd,
                                  highlightthickness=std.bd_width)
-
-                self.entry_of_options[stage+' '+option] = entry
+                key = 'Entry-' + stage + ' ' + option
+                self.entry_of_options[key] = entry
                 entry.place(relx=0.2,
                             rely=0.2,
                             x=gapx,
                             y=gapy,
                             anchor='ne')
-                gapx += 200
+                gapx += 150
                 if option == 'Temperatura':
                     text = '°C'
                 else:
@@ -160,6 +160,7 @@ class ExperimentPCR(CetusPCR):
                                       font=(std.font_title, 14, 'bold'))
                 unit_label.place(in_=entry,
                                  relx=1,
+
                                  rely=0,
                                  x=10)
             gapy += 120
@@ -169,11 +170,40 @@ class ExperimentPCR(CetusPCR):
                              bg=std.bg,
                              fg=std.label_color)
             self.entry_of_options['Label-'+stage] = label
-            label.place(in_=self.entry_of_options[stage+' Temperatura'],
+            label.place(in_=self.entry_of_options['Entry-'+stage+' Temperatura'],
                         anchor='sw',
                         y=-10,
                         bordermode='outside')
 
+        gapy = 20
+        for option in ('Nº de ciclos', 'Temperatura Final'):
+            key = 'Entry- ' + option
+            entry = tk.Entry(master=self,
+                             font=(std.font_title, 30),
+                             width=3,
+                             bd=1,
+                             highlightcolor=std.bd,
+                             highlightthickness=std.bd_width)
+            entry.place(relx=0.7,
+                        rely=0.2,
+                        y=gapy)
+            gapy += 120
+            self.entry_of_options[key] = entry
+
+            key = 'Label- ' + option
+            label = tk.Label(master=self,
+                             font=(std.font_title, 20, 'bold'),
+                             text=option+':',
+                             fg=std.label_color,
+                             bg=std.bg)
+            label.place(in_=entry,
+                        anchor='s',
+                        relx=0.5,
+                        y=-10)
+            self.entry_of_options[key] = label
+
         self.button_run = tk.Button(master=self,
                                     text='Iniciar',
                                     font=(std.font_buttons, 20))
+        for i in self.entry_of_options:
+            print(i)
