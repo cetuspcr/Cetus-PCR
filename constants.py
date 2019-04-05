@@ -1,13 +1,13 @@
-# Standard parameters for widgets
+# Parametros iniciais para os widgets
 
-# Graphic design; generally named based on tkinter constants
+# Design gráfico; Geralmente nomeados com base nas constantes do tkinter.
 bg = '#434343'
 bd = '#2ECC71'
 bd_width = 3
 relief = 'flat'
 label_color = 'white'
 
-# Fonts
+# Fontes
 font_title = 'Courier New'
 font_buttons = 'Arial'
 
