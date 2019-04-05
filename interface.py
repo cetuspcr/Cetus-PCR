@@ -27,6 +27,7 @@ class CetusPCR(tk.Frame):
         self.master = master
         self.master.geometry('+200+10')
         self.master.title('Cetus PCR')
+        self.master.iconbitmap(std.icon)
         self.pack()
         self.pack_propagate(False)
         self.configure(width=1000,
@@ -45,6 +46,7 @@ class CetusPCR(tk.Frame):
         será futuramente herdada pela janela ExperimentPCR e não é suposta  para
         copiar todos os widgets para outra janela, apenas as opções de quadro.
         """
+        # Create widgets
         self.options_frame = tk.Frame(master=self,
                                       width=250,
                                       height=200,
@@ -62,6 +64,7 @@ class CetusPCR(tk.Frame):
                                           fg=std.label_color,
                                           width=7)
         self.buttons = {}
+        # Create and place 3 buttons on the options_frame
         for but in ('Abrir', 'Novo', 'Excluir'):
             self.buttons[but] = tk.Button(master=self.options_frame,
                                           font=(std.font_buttons, 13, 'bold'),
@@ -82,6 +85,7 @@ class CetusPCR(tk.Frame):
                                                fg=std.label_color,
                                                bg=std.bg)
 
+        # Place widgets (buttons not included)
         self.options_frame.place(rely=0.45,
                                  relx=0.75,
                                  anchor='center')
@@ -109,10 +113,11 @@ class ExperimentPCR(CetusPCR):
     Seu estado é definido pelas instruções dadas pelo usuário
     na janela anterior.
 
-    Abrir -> Widgets de entrada são desabilitados com as opções do experimento dentro deles.
+    Abrir -> Widgets de entrada são desabilitados com as opções do experimento
+    dentro deles.
     Novo -> Widgets de entrada são habilitados e esvaziados.
 
-    Se o usuário escolher a opção Abrir, ainda é possivel
+    Se o usuário escolher a opção Abrir, ainda é possível
     ativar os widgets de entrada pressionando o botão Editar.
 
     Herdar do CetusPCR cria automaticamente uma janela
@@ -123,4 +128,52 @@ class ExperimentPCR(CetusPCR):
     def __init__(self, master: tk.Toplevel):
         super().__init__(master)
 
+    def _widgets(self):
+        self.entry_of_options = {}
+        self.entry_labels = {}
+        gapy = 20
+        for stage in ('Desnaturação', 'Anelamento', 'Extensão'):
+            gapx = 20
+            for option in ('Temperatura', 'Tempo'):
+                entry = tk.Entry(master=self,
+                                 font=(std.font_title, 30),
+                                 width=3,
+                                 bd=1,
+                                 highlightcolor=std.bd,
+                                 highlightthickness=std.bd_width)
 
+                self.entry_of_options[stage+' '+option] = entry
+                entry.place(relx=0.2,
+                            rely=0.2,
+                            x=gapx,
+                            y=gapy,
+                            anchor='ne')
+                gapx += 200
+                if option == 'Temperatura':
+                    text = '°C'
+                else:
+                    text = 'Seg'
+                unit_label = tk.Label(master=self,
+                                      text=text,
+                                      fg=std.label_color,
+                                      bg=std.bg,
+                                      font=(std.font_title, 14, 'bold'))
+                unit_label.place(in_=entry,
+                                 relx=1,
+                                 rely=0,
+                                 x=10)
+            gapy += 120
+            label = tk.Label(master=self,
+                             font=(std.font_title, 20, 'bold'),
+                             text=stage+':',
+                             bg=std.bg,
+                             fg=std.label_color)
+            self.entry_of_options['Label-'+stage] = label
+            label.place(in_=self.entry_of_options[stage+' Temperatura'],
+                        anchor='sw',
+                        y=-10,
+                        bordermode='outside')
+
+        self.button_run = tk.Button(master=self,
+                                    text='Iniciar',
+                                    font=(std.font_buttons, 20))
