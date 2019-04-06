@@ -8,12 +8,17 @@ class ExperimentPCR -> Edita/Executa o experimento selecionado;
 
 Todas as classes de janelas herdadas da biblioteca tk.Frame.
 Isso é feito apenas por propósitos de design,
-uma vez que facilita a colocação das bordas e organização dos widgets dentro da janela.
+uma vez que facilita a colocação das bordas e organização dos widgets dentro da
+janela.
 """
 
 import tkinter as tk
 from tkinter import ttk
 import constants as std
+
+import functions
+
+# f = functions.Experiment()
 
 
 class CetusPCR(tk.Frame):
@@ -21,7 +26,6 @@ class CetusPCR(tk.Frame):
 
     Nessa janela o usuário pode selecionar, deletar ou criar um experimento.
     """
-
     def __init__(self, master: tk.Tk):
         super().__init__(master)
         self.master = master
@@ -38,15 +42,16 @@ class CetusPCR(tk.Frame):
                        highlightcolor=std.bd,
                        highlightbackground=std.bd,
                        highlightthickness=std.bd_width)
+        # self.show_experiments()
 
     def _widgets(self):
         """Cria os widgets da janela.
 
         A razão para qual os widgets são colocador em outro método é que essa classe
-        será futuramente herdada pela janela ExperimentPCR e não é suposta  para
+        será futuramente herdada pela janela ExperimentPCR e não é suposta  para\
         copiar todos os widgets para outra janela, apenas as opções de quadro.
         """
-        # Create widgets
+        # Criar os widgets
         self.options_frame = tk.Frame(master=self,
                                       width=250,
                                       height=200,
@@ -64,7 +69,7 @@ class CetusPCR(tk.Frame):
                                           fg=std.label_color,
                                           width=7)
         self.buttons = {}
-        # Create and place 3 buttons on the options_frame
+        # Criar e posicionar 3 botões dentro do "options_frame"
         for but in ('Abrir', 'Novo', 'Excluir'):
             self.buttons[but] = tk.Button(master=self.options_frame,
                                           font=(std.font_buttons, 13, 'bold'),
@@ -73,10 +78,11 @@ class CetusPCR(tk.Frame):
                                           width=8,
                                           height=0)
             self.buttons[but].pack(pady=14)
+        self.buttons['Abrir'].configure(command=self.handle_openbutton)
 
         self.experiment_combo = ttk.Combobox(master=self,
-                                             width=25,
-                                             font=(std.font_title, 20),
+                                             width=30,
+                                             font=(std.font_title, 15),
                                              values=['Experimento 01'])
 
         self.experiment_combo_title = tk.Label(master=self,
@@ -85,7 +91,7 @@ class CetusPCR(tk.Frame):
                                                fg=std.label_color,
                                                bg=std.bg)
 
-        # Place widgets (buttons not included)
+        # Posicionar os widgets(botões não incluídos)
         self.options_frame.place(rely=0.45,
                                  relx=0.75,
                                  anchor='center')
@@ -104,6 +110,17 @@ class CetusPCR(tk.Frame):
                                           relx=0.5,
                                           anchor='s',
                                           bordermode='outside')
+
+    def show_experiments(self):
+        self.experiment_combo.configure(values=functions.experiments)
+
+    def handle_openbutton(self):
+        print(functions.experiments)
+        newroot = tk.Tk()
+        new = ExperimentPCR(newroot,
+                            functions.experiments[self.experiment_combo.current()])
+        new._widgets()
+        self.master.destroy()
 
 
 class ExperimentPCR(CetusPCR):
@@ -125,15 +142,15 @@ class ExperimentPCR(CetusPCR):
     Isso é util pois a janela deve ter a mesma aparência, título, ícone e tamanho,
     porém, com widgets e opções diferentes.
     """
-    def __init__(self, master: tk.Toplevel):
+    def __init__(self, master: tk.Tk, experiment):
         super().__init__(master)
+        self.experiment = experiment
 
     def _widgets(self):
         self.entry_of_options = {}
-        self.entry_labels = {}
-        gapy = 20
+        self.gapy = 20
         for stage in ('Desnaturação', 'Anelamento', 'Extensão'):
-            gapx = 20
+            self.gapx = 20
             for option in ('Temperatura', 'Tempo'):
                 entry = tk.Entry(master=self,
                                  font=(std.font_title, 30),
@@ -141,14 +158,14 @@ class ExperimentPCR(CetusPCR):
                                  bd=1,
                                  highlightcolor=std.bd,
                                  highlightthickness=std.bd_width)
-
-                self.entry_of_options[stage+' '+option] = entry
+                key = 'Entry-' + stage + ' ' + option
+                self.entry_of_options[key] = entry
                 entry.place(relx=0.2,
                             rely=0.2,
-                            x=gapx,
-                            y=gapy,
+                            x=self.gapx,
+                            y=self.gapy,
                             anchor='ne')
-                gapx += 200
+                self.gapx += 150
                 if option == 'Temperatura':
                     text = '°C'
                 else:
@@ -162,18 +179,119 @@ class ExperimentPCR(CetusPCR):
                                  relx=1,
                                  rely=0,
                                  x=10)
-            gapy += 120
+            self.gapy += 120
             label = tk.Label(master=self,
                              font=(std.font_title, 20, 'bold'),
                              text=stage+':',
                              bg=std.bg,
                              fg=std.label_color)
             self.entry_of_options['Label-'+stage] = label
-            label.place(in_=self.entry_of_options[stage+' Temperatura'],
+            label.place(in_=self.entry_of_options['Entry-'+stage+' Temperatura'],
                         anchor='sw',
                         y=-10,
                         bordermode='outside')
 
-        self.button_run = tk.Button(master=self,
-                                    text='Iniciar',
-                                    font=(std.font_buttons, 20))
+        self.gapy = 20
+        for option in ('Nº de ciclos', 'Temperatura Final'):
+            key = 'Entry- ' + option
+            entry = tk.Entry(master=self,
+                             font=(std.font_title, 30),
+                             width=3,
+                             bd=1,
+                             highlightcolor=std.bd,
+                             highlightthickness=std.bd_width)
+            entry.place(relx=0.7,
+                        rely=0.2,
+                        y=self.gapy)
+            self.gapy += 120
+            self.entry_of_options[key] = entry
+
+            key = 'Label- ' + option
+            label = tk.Label(master=self,
+                             font=(std.font_title, 20, 'bold'),
+                             text=option+':',
+                             fg=std.label_color,
+                             bg=std.bg)
+            label.place(in_=entry,
+                        anchor='s',
+                        relx=0.5,
+                        y=-10)
+            self.entry_of_options[key] = label
+            if option == 'Temperatura Final':
+                unit_label = tk.Label(master=self,
+                                      font=(std.font_title, 14, 'bold'),
+                                      text='°C',
+                                      bg=std.bg,
+                                      fg=std.label_color)
+                unit_label.place(in_=entry,
+                                 # anchor='ne',
+                                 relx=1,
+                                 rely=0,
+                                 x=10)
+
+        self.buttons_frame = tk.Frame(master=self,
+                                      width=250,
+                                      height=100,
+                                      bg=std.bg,
+                                      bd=0,
+                                      relief=std.relief,
+                                      highlightcolor=std.bd,
+                                      highlightbackground=std.bd,
+                                      highlightthickness=std.bd_width)
+        self.buttons_frame.place(in_=self.entry_of_options['Entry- Temperatura Final'],
+                                 anchor='n',
+                                 relx=0.5,
+                                 rely=1,
+                                 y=50)
+        self.buttons_frame_title = tk.Label(master=self,
+                                            text='Opções',
+                                            font=(std.font_title, 13, 'bold'),
+                                            bg=std.bg,
+                                            fg=std.label_color,
+                                            width=7)
+        self.buttons_frame_title.place(in_=self.buttons_frame,
+                                       bordermode='outside',
+                                       relx=0.05,
+                                       y=-10)
+        self.buttons_frame.pack_propagate(False)
+
+        self.buttons = {}
+        for but in ('Editar', 'Executar'):
+            self.buttons[but] = tk.Button(master=self.buttons_frame,
+                                          text=but,
+                                          width=7,
+                                          font=(std.font_buttons, 15))
+            self.buttons[but].pack(side='left',
+                                   padx=17)
+        # self.open_experiment(self.experiment)
+        for key in self.entry_of_options:
+            print(key)
+
+    def open_experiment(self, experiment: functions.Experiment):
+        # values = experiment.__dict__.keys()
+        # done_entry = []
+        # for value in values:
+        #     if value != 'name':
+        #         for entry in self.entry_of_options:
+        #             if entry not in done_entry and 'Entry' in entry:
+        #                 self.entry_of_options[entry].insert(0, experiment.__dict__
+        #                                                     [value])
+        #                 done_entry.append(entry)
+        #                 break
+
+        self.entry_of_options['Entry - Desnaturação Temperatura']\
+            .insert(0, experiment.denaturation_c)
+        self.entry_of_options['Entry - Desnaturação Tempo'] \
+            .insert(0, experiment.denaturation_t)
+        self.entry_of_options['Entry - Anelamento Temperatura'] \
+            .insert(0, experiment.annealing_c)
+        self.entry_of_options['Entry - Anelamento Tempo'] \
+            .insert(0, experiment.annealing_t)
+        self.entry_of_options['Entry - Extensão Temperatura'] \
+            .insert(0, experiment.extension_c)
+        self.entry_of_options['Entry - Extensão Tempo'] \
+            .insert(0, experiment.extension_t)
+        self.entry_of_options['Entry - Nº de ciclos'] \
+            .insert(0, experiment.number_cycles)
+        self.entry_of_options['Entry - Temperatura Final'] \
+            .insert(0, experiment.final_temp)
