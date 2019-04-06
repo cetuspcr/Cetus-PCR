@@ -16,6 +16,10 @@ import tkinter as tk
 from tkinter import ttk
 import constants as std
 
+import functions
+
+# f = functions.Experiment()
+
 
 class CetusPCR(tk.Frame):
     """Primeira janela do aplicativo.
@@ -38,6 +42,7 @@ class CetusPCR(tk.Frame):
                        highlightcolor=std.bd,
                        highlightbackground=std.bd,
                        highlightthickness=std.bd_width)
+        # self.show_experiments()
 
     def _widgets(self):
         """Cria os widgets da janela.
@@ -73,10 +78,11 @@ class CetusPCR(tk.Frame):
                                           width=8,
                                           height=0)
             self.buttons[but].pack(pady=14)
+        self.buttons['Abrir'].configure(command=self.handle_openbutton)
 
         self.experiment_combo = ttk.Combobox(master=self,
-                                             width=25,
-                                             font=(std.font_title, 20),
+                                             width=30,
+                                             font=(std.font_title, 15),
                                              values=['Experimento 01'])
 
         self.experiment_combo_title = tk.Label(master=self,
@@ -105,6 +111,17 @@ class CetusPCR(tk.Frame):
                                           anchor='s',
                                           bordermode='outside')
 
+    def show_experiments(self):
+        self.experiment_combo.configure(values=functions.experiments)
+
+    def handle_openbutton(self):
+        print(functions.experiments)
+        newroot = tk.Tk()
+        new = ExperimentPCR(newroot,
+                            functions.experiments[self.experiment_combo.current()])
+        new._widgets()
+        self.master.destroy()
+
 
 class ExperimentPCR(CetusPCR):
     """Lida com o experimento dado pela janela CetusPCR.
@@ -125,12 +142,12 @@ class ExperimentPCR(CetusPCR):
     Isso é util pois a janela deve ter a mesma aparência, título, ícone e tamanho,
     porém, com widgets e opções diferentes.
     """
-    def __init__(self, master: tk.Toplevel):
+    def __init__(self, master: tk.Tk, experiment):
         super().__init__(master)
+        self.experiment = experiment
 
     def _widgets(self):
         self.entry_of_options = {}
-        self.entry_labels = {}
         self.gapy = 20
         for stage in ('Desnaturação', 'Anelamento', 'Extensão'):
             self.gapx = 20
@@ -246,3 +263,19 @@ class ExperimentPCR(CetusPCR):
                                           font=(std.font_buttons, 15))
             self.buttons[but].pack(side='left',
                                    padx=17)
+        self.open_experiment(self.experiment)
+
+    def open_experiment(self, experiment: functions.Experiment):
+        values = experiment.__dict__.keys()
+        done_entry = []
+        for value in values:
+            if value != 'name':
+                for entry in self.entry_of_options:
+                    if entry not in done_entry and 'Entry' in entry:
+                        self.entry_of_options[entry].insert(0, experiment.__dict__
+                                                            [value])
+                        done_entry.append(entry)
+                        break
+
+
+

@@ -1,4 +1,4 @@
-# Parametros iniciais para os widgets
+# Parâmetros iniciais para os widgets
 
 # Design gráfico; Geralmente nomeados com base nas constantes do tkinter.
 bg = '#434343'
