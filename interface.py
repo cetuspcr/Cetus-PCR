@@ -193,7 +193,7 @@ class ExperimentPCR(CetusPCR):
 
         self.gapy = 20
         for option in ('Nº de ciclos', 'Temperatura Final'):
-            key = 'Entry- ' + option
+            key = 'Entry-' + option
             entry = tk.Entry(master=self,
                              font=(std.font_title, 30),
                              width=3,
@@ -206,7 +206,7 @@ class ExperimentPCR(CetusPCR):
             self.gapy += 120
             self.entry_of_options[key] = entry
 
-            key = 'Label- ' + option
+            key = 'Label-' + option
             label = tk.Label(master=self,
                              font=(std.font_title, 20, 'bold'),
                              text=option+':',
@@ -238,7 +238,7 @@ class ExperimentPCR(CetusPCR):
                                       highlightcolor=std.bd,
                                       highlightbackground=std.bd,
                                       highlightthickness=std.bd_width)
-        self.buttons_frame.place(in_=self.entry_of_options['Entry- Temperatura Final'],
+        self.buttons_frame.place(in_=self.entry_of_options['Entry-Temperatura Final'],
                                  anchor='n',
                                  relx=0.5,
                                  rely=1,
@@ -263,9 +263,9 @@ class ExperimentPCR(CetusPCR):
                                           font=(std.font_buttons, 15))
             self.buttons[but].pack(side='left',
                                    padx=17)
-        # self.open_experiment(self.experiment)
         for key in self.entry_of_options:
             print(key)
+        self.open_experiment(self.experiment)
 
     def open_experiment(self, experiment: functions.Experiment):
         # values = experiment.__dict__.keys()
@@ -279,19 +279,19 @@ class ExperimentPCR(CetusPCR):
         #                 done_entry.append(entry)
         #                 break
 
-        self.entry_of_options['Entry - Desnaturação Temperatura']\
+        self.entry_of_options['Entry-Desnaturação Temperatura']\
             .insert(0, experiment.denaturation_c)
-        self.entry_of_options['Entry - Desnaturação Tempo'] \
+        self.entry_of_options['Entry-Desnaturação Tempo'] \
             .insert(0, experiment.denaturation_t)
-        self.entry_of_options['Entry - Anelamento Temperatura'] \
+        self.entry_of_options['Entry-Anelamento Temperatura'] \
             .insert(0, experiment.annealing_c)
-        self.entry_of_options['Entry - Anelamento Tempo'] \
+        self.entry_of_options['Entry-Anelamento Tempo'] \
             .insert(0, experiment.annealing_t)
-        self.entry_of_options['Entry - Extensão Temperatura'] \
+        self.entry_of_options['Entry-Extensão Temperatura'] \
             .insert(0, experiment.extension_c)
-        self.entry_of_options['Entry - Extensão Tempo'] \
+        self.entry_of_options['Entry-Extensão Tempo'] \
             .insert(0, experiment.extension_t)
-        self.entry_of_options['Entry - Nº de ciclos'] \
+        self.entry_of_options['Entry-Nº de ciclos'] \
             .insert(0, experiment.number_cycles)
-        self.entry_of_options['Entry - Temperatura Final'] \
+        self.entry_of_options['Entry-Temperatura Final'] \
             .insert(0, experiment.final_temp)

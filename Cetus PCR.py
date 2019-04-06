@@ -4,7 +4,7 @@ import functions
 
 if __name__ == '__main__':
     root = tk.Tk()
-    cetus = interface.ExperimentPCR(root)
+    cetus = interface.CetusPCR(root)
     cetus._widgets()
     functions.experiments = functions.open_pickle('experiments.pcr')
     cetus.show_experiments()
