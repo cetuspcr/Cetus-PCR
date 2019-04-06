@@ -27,7 +27,6 @@ def open_pickle(path):
         return []
 
 
-
 def dump_pickle(path, obj):
     with open(path, 'wb') as outfile:
         pickle.dump(obj, outfile)

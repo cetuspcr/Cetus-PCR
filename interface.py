@@ -263,19 +263,35 @@ class ExperimentPCR(CetusPCR):
                                           font=(std.font_buttons, 15))
             self.buttons[but].pack(side='left',
                                    padx=17)
-        self.open_experiment(self.experiment)
+        # self.open_experiment(self.experiment)
+        for key in self.entry_of_options:
+            print(key)
 
     def open_experiment(self, experiment: functions.Experiment):
-        values = experiment.__dict__.keys()
-        done_entry = []
-        for value in values:
-            if value != 'name':
-                for entry in self.entry_of_options:
-                    if entry not in done_entry and 'Entry' in entry:
-                        self.entry_of_options[entry].insert(0, experiment.__dict__
-                                                            [value])
-                        done_entry.append(entry)
-                        break
+        # values = experiment.__dict__.keys()
+        # done_entry = []
+        # for value in values:
+        #     if value != 'name':
+        #         for entry in self.entry_of_options:
+        #             if entry not in done_entry and 'Entry' in entry:
+        #                 self.entry_of_options[entry].insert(0, experiment.__dict__
+        #                                                     [value])
+        #                 done_entry.append(entry)
+        #                 break
 
-
-
+        self.entry_of_options['Entry - Desnaturação Temperatura']\
+            .insert(0, experiment.denaturation_c)
+        self.entry_of_options['Entry - Desnaturação Tempo'] \
+            .insert(0, experiment.denaturation_t)
+        self.entry_of_options['Entry - Anelamento Temperatura'] \
+            .insert(0, experiment.annealing_c)
+        self.entry_of_options['Entry - Anelamento Tempo'] \
+            .insert(0, experiment.annealing_t)
+        self.entry_of_options['Entry - Extensão Temperatura'] \
+            .insert(0, experiment.extension_c)
+        self.entry_of_options['Entry - Extensão Tempo'] \
+            .insert(0, experiment.extension_t)
+        self.entry_of_options['Entry - Nº de ciclos'] \
+            .insert(0, experiment.number_cycles)
+        self.entry_of_options['Entry - Temperatura Final'] \
+            .insert(0, experiment.final_temp)
