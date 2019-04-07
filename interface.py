@@ -118,7 +118,7 @@ class CetusPCR(tk.Frame):
         print(functions.experiments)
         newroot = tk.Tk()
         new = ExperimentPCR(newroot,
-                            functions.experiments[self.experiment_combo.current()])
+                            self.experiment_combo.current())
         new._widgets()
         self.master.destroy()
 
@@ -142,9 +142,10 @@ class ExperimentPCR(CetusPCR):
     Isso é util pois a janela deve ter a mesma aparência, título, ícone e tamanho,
     porém, com widgets e opções diferentes.
     """
-    def __init__(self, master: tk.Tk, experiment):
+    def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
-        self.experiment = experiment
+        self.master.protocol('WM_DELETE_WINDOW', self.close_window)
+        self.experiment = functions.experiments[exp_index]
 
     def _widgets(self):
         self.entry_of_options = {}
@@ -256,42 +257,56 @@ class ExperimentPCR(CetusPCR):
         self.buttons_frame.pack_propagate(False)
 
         self.buttons = {}
-        for but in ('Editar', 'Executar'):
+        for but in ('Salvar', 'Executar'):
             self.buttons[but] = tk.Button(master=self.buttons_frame,
                                           text=but,
                                           width=7,
                                           font=(std.font_buttons, 15))
             self.buttons[but].pack(side='left',
                                    padx=17)
+        self.buttons['Salvar'].configure(command=self.edit_experiment)
+
         for key in self.entry_of_options:
             print(key)
-        self.open_experiment(self.experiment)
+        self.open_experiment()
+        # self.experiment.name = 'Test experiment'
 
-    def open_experiment(self, experiment: functions.Experiment):
-        # values = experiment.__dict__.keys()
-        # done_entry = []
-        # for value in values:
-        #     if value != 'name':
-        #         for entry in self.entry_of_options:
-        #             if entry not in done_entry and 'Entry' in entry:
-        #                 self.entry_of_options[entry].insert(0, experiment.__dict__
-        #                                                     [value])
-        #                 done_entry.append(entry)
-        #                 break
-
-        self.entry_of_options['Entry-Desnaturação Temperatura']\
-            .insert(0, experiment.denaturation_c)
+    def open_experiment(self):
+        self.entry_of_options['Entry-Desnaturação Temperatura'] \
+            .insert(0, self.experiment.denaturation_c)
         self.entry_of_options['Entry-Desnaturação Tempo'] \
-            .insert(0, experiment.denaturation_t)
+            .insert(0, self.experiment.denaturation_t)
         self.entry_of_options['Entry-Anelamento Temperatura'] \
-            .insert(0, experiment.annealing_c)
+            .insert(0, self.experiment.annealing_c)
         self.entry_of_options['Entry-Anelamento Tempo'] \
-            .insert(0, experiment.annealing_t)
+            .insert(0, self.experiment.annealing_t)
         self.entry_of_options['Entry-Extensão Temperatura'] \
-            .insert(0, experiment.extension_c)
+            .insert(0, self.experiment.extension_c)
         self.entry_of_options['Entry-Extensão Tempo'] \
-            .insert(0, experiment.extension_t)
+            .insert(0, self.experiment.extension_t)
         self.entry_of_options['Entry-Nº de ciclos'] \
-            .insert(0, experiment.number_cycles)
+            .insert(0, self.experiment.number_cycles)
         self.entry_of_options['Entry-Temperatura Final'] \
-            .insert(0, experiment.final_temp)
+            .insert(0, self.experiment.final_temp)
+
+    def edit_experiment(self):
+        self.experiment.denaturation_c = \
+            self.entry_of_options['Entry-Desnaturação Temperatura'].get()
+        self.experiment.denaturation_t = \
+            self.entry_of_options['Entry-Desnaturação Tempo'].get()
+        self.experiment.annealing_c = \
+            self.entry_of_options['Entry-Anelamento Temperatura'].get()
+        self.experiment.annealing_t = \
+            self.entry_of_options['Entry-Anelamento Tempo'].get()
+        self.experiment.extension_c = \
+            self.entry_of_options['Entry-Extensão Temperatura'].get()
+        self.experiment.extension_t = \
+            self.entry_of_options['Entry-Extensão Tempo'].get()
+        self.experiment.number_cycles = \
+            self.entry_of_options['Entry-Nº de ciclos'].get()
+        self.experiment.final_temp = \
+            self.entry_of_options['Entry-Temperatura Final'].get()
+
+    def close_window(self):
+        functions.dump_pickle(std.exp_path, functions.experiments)
+        self.master.destroy()

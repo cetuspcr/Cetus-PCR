@@ -15,3 +15,4 @@ icon = 'assets/cetus.ico'
 
 hover_text = 'Feito com ♥ pelo 3º Mecatrônica (2k19).'
 
+exp_path = 'experiments.pcr'

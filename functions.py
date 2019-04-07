@@ -17,6 +17,9 @@ class Experiment:
         self.number_cycles = number_cycles
         self.final_temp = final_temp
 
+    def __str__(self):
+        return self.name
+
 
 def open_pickle(path):
     try:
