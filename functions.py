@@ -5,17 +5,16 @@ experiments = []
 
 
 class Experiment:
-    def __init__(self, denaturation_c, denaturation_t, annealing_c, annealing_t,
-                 extension_c, extension_t, number_cycles, final_temp):
+    def __init__(self):
         self.name = ''
-        self.denaturation_c = denaturation_c
-        self.denaturation_t = denaturation_t
-        self.annealing_c = annealing_c
-        self.annealing_t = annealing_t
-        self.extension_c = extension_c
-        self.extension_t = extension_t
-        self.number_cycles = number_cycles
-        self.final_temp = final_temp
+        self.denaturation_c = ''
+        self.denaturation_t = ''
+        self.annealing_c = ''
+        self.annealing_t = ''
+        self.extension_c = ''
+        self.extension_t = ''
+        self.number_cycles = ''
+        self.final_temp = ''
 
     def __str__(self):
         return self.name

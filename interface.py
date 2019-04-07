@@ -13,7 +13,7 @@ janela.
 """
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, simpledialog, messagebox
 import constants as std
 
 import functions
@@ -79,6 +79,7 @@ class CetusPCR(tk.Frame):
                                           height=0)
             self.buttons[but].pack(pady=14)
         self.buttons['Abrir'].configure(command=self.handle_openbutton)
+        self.buttons['Novo'].configure(command=self.handle_newbutton)
 
         self.experiment_combo = ttk.Combobox(master=self,
                                              width=30,
@@ -115,10 +116,28 @@ class CetusPCR(tk.Frame):
         self.experiment_combo.configure(values=functions.experiments)
 
     def handle_openbutton(self):
-        print(functions.experiments)
         newroot = tk.Tk()
         new = ExperimentPCR(newroot,
                             self.experiment_combo.current())
+        new._widgets()
+        self.master.destroy()
+
+    def handle_newbutton(self):
+        new_experiment = functions.Experiment()
+        name = tk.simpledialog.askstring('Novo Experimento', 'Digite o nome do'
+                                                             ' experimento:',
+                                         parent=self)
+        if name is not None:
+            new_experiment.name = name
+        else:
+            messagebox.showerror('Novo Experimento', 'O nome não pode estar'
+                                                     ' vazio')
+        functions.experiments.append(new_experiment)
+        self.experiment_combo.configure(values=functions.experiments)
+
+        newroot = tk.Tk()
+        new = ExperimentPCR(newroot,
+                            functions.experiments.index(new_experiment))
         new._widgets()
         self.master.destroy()
 
@@ -146,6 +165,7 @@ class ExperimentPCR(CetusPCR):
         super().__init__(master)
         self.master.protocol('WM_DELETE_WINDOW', self.close_window)
         self.experiment = functions.experiments[exp_index]
+        self.master.focus_force()
 
     def _widgets(self):
         self.entry_of_options = {}
