@@ -336,4 +336,5 @@ class ExperimentPCR(CetusPCR):
             self.entry_of_options['Entry-Nº de ciclos'].get()
         self.experiment.final_temp = \
             self.entry_of_options['Entry-Temperatura Final'].get()
+        messagebox.showinfo('Cetus PCR', 'Experimento salvo!', parent=self)
 
