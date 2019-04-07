@@ -1,5 +1,8 @@
 import pickle
-# import tkinter as tk
+from tkinter import simpledialog
+import tkinter as tk
+
+import constants as std
 
 experiments = []
 
@@ -32,3 +35,15 @@ def open_pickle(path):
 def dump_pickle(path, obj):
     with open(path, 'wb') as outfile:
         pickle.dump(obj, outfile)
+
+
+class StringDialog(simpledialog._QueryString):
+    # Créditos ao TeamSpen210 do Reddit
+    def body(self, master):
+        super().body(master)
+        self.iconbitmap(std.icon)
+
+
+def ask_string(title, prompt, **kargs):
+    d = StringDialog(title, prompt, **kargs)
+    return d.result

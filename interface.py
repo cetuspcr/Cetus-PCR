@@ -123,24 +123,24 @@ class CetusPCR(tk.Frame):
         self.master.destroy()
 
     def handle_newbutton(self):
+        print(functions.StringDialog.__dict__)
         new_experiment = functions.Experiment()
-        name = tk.simpledialog.askstring('Novo Experimento', 'Digite o nome do'
-                                                             ' experimento:',
-                                         parent=self)
-        if name is not None:
-            new_experiment.name = name
-        else:
+        name = functions.ask_string('Novo Experimento', 'Digite o nome do'
+                                                        ' experimento:',
+                                    parent=self.master)
+        new_experiment.name = name
+        if new_experiment.name is not None:
+            functions.experiments.append(new_experiment)
+            self.experiment_combo.configure(values=functions.experiments)
+
+            newroot = tk.Tk()
+            new = ExperimentPCR(newroot,
+                                functions.experiments.index(new_experiment))
+            new._widgets()
+            self.master.destroy()
+        elif name is None:
             messagebox.showerror('Novo Experimento', 'O nome não pode estar'
                                                      ' vazio')
-        functions.experiments.append(new_experiment)
-        self.experiment_combo.configure(values=functions.experiments)
-
-        newroot = tk.Tk()
-        new = ExperimentPCR(newroot,
-                            functions.experiments.index(new_experiment))
-        new._widgets()
-        self.master.destroy()
-
 
 class ExperimentPCR(CetusPCR):
     """Lida com o experimento dado pela janela CetusPCR.
@@ -330,3 +330,4 @@ class ExperimentPCR(CetusPCR):
     def close_window(self):
         functions.dump_pickle(std.exp_path, functions.experiments)
         self.master.destroy()
+
