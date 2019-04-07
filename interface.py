@@ -280,8 +280,8 @@ class ExperimentPCR(CetusPCR):
         for but in ('Salvar', 'Executar'):
             self.buttons[but] = tk.Button(master=self.buttons_frame,
                                           text=but,
-                                          width=7,
-                                          font=(std.font_buttons, 15))
+                                          width=8,
+                                          font=(std.font_buttons, 13,'bold'))
             self.buttons[but].pack(side='left',
                                    padx=17)
         self.buttons['Salvar'].configure(command=self.edit_experiment)
