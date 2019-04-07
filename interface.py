@@ -13,7 +13,7 @@ janela.
 """
 
 import tkinter as tk
-from tkinter import ttk, simpledialog, messagebox
+from tkinter import ttk, messagebox
 import constants as std
 
 import functions
@@ -32,6 +32,7 @@ class CetusPCR(tk.Frame):
         self.master.geometry('+200+10')
         self.master.title('Cetus PCR')
         self.master.iconbitmap(std.icon)
+        self.master.protocol('WM_DELETE_WINDOW', self.close_window)
         self.pack()
         self.pack_propagate(False)
         self.configure(width=1000,
@@ -80,6 +81,7 @@ class CetusPCR(tk.Frame):
             self.buttons[but].pack(pady=14)
         self.buttons['Abrir'].configure(command=self.handle_openbutton)
         self.buttons['Novo'].configure(command=self.handle_newbutton)
+        self.buttons['Excluir'].configure(command=self.handle_deletebutton)
 
         self.experiment_combo = ttk.Combobox(master=self,
                                              width=30,
@@ -123,7 +125,6 @@ class CetusPCR(tk.Frame):
         self.master.destroy()
 
     def handle_newbutton(self):
-        print(functions.StringDialog.__dict__)
         new_experiment = functions.Experiment()
         name = functions.ask_string('Novo Experimento', 'Digite o nome do'
                                                         ' experimento:',
@@ -141,6 +142,19 @@ class CetusPCR(tk.Frame):
         elif name is None:
             messagebox.showerror('Novo Experimento', 'O nome não pode estar'
                                                      ' vazio')
+
+    def handle_deletebutton(self):
+        delete = messagebox.askyesnocancel('Deletar experimento', 'Você tem certeza?')
+        if delete:
+            functions.experiments.pop(self.experiment_combo.current())
+            print(functions.experiments)
+            self.experiment_combo.configure(values=functions.experiments)
+            self.experiment_combo.delete(0, 'end')
+
+    def close_window(self):
+        functions.dump_pickle(std.exp_path, functions.experiments)
+        self.master.destroy()
+
 
 class ExperimentPCR(CetusPCR):
     """Lida com o experimento dado pela janela CetusPCR.
@@ -163,7 +177,6 @@ class ExperimentPCR(CetusPCR):
     """
     def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
-        self.master.protocol('WM_DELETE_WINDOW', self.close_window)
         self.experiment = functions.experiments[exp_index]
         self.master.focus_force()
 
@@ -281,15 +294,12 @@ class ExperimentPCR(CetusPCR):
             self.buttons[but] = tk.Button(master=self.buttons_frame,
                                           text=but,
                                           width=7,
-                                          font=(std.font_buttons, 15))
+                                          font=(std.font_buttons, 15, 'bold'))
             self.buttons[but].pack(side='left',
-                                   padx=17)
+                                   padx=15)
         self.buttons['Salvar'].configure(command=self.edit_experiment)
 
-        for key in self.entry_of_options:
-            print(key)
         self.open_experiment()
-        # self.experiment.name = 'Test experiment'
 
     def open_experiment(self):
         self.entry_of_options['Entry-Desnaturação Temperatura'] \
@@ -326,8 +336,4 @@ class ExperimentPCR(CetusPCR):
             self.entry_of_options['Entry-Nº de ciclos'].get()
         self.experiment.final_temp = \
             self.entry_of_options['Entry-Temperatura Final'].get()
-
-    def close_window(self):
-        functions.dump_pickle(std.exp_path, functions.experiments)
-        self.master.destroy()
 
