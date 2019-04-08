@@ -42,7 +42,6 @@ class CetusPCR(tk.Frame):
                        highlightcolor=std.bd,
                        highlightbackground=std.bd,
                        highlightthickness=std.bd_width)
-        # self.show_experiments()
 
     def _widgets(self):
         """Cria os widgets da janela.
@@ -115,9 +114,10 @@ class CetusPCR(tk.Frame):
                                           anchor='s',
                                           bordermode='outside')
 
-        self.experiment_combo.current(0)
+        self.show_experiments()
 
     def show_experiments(self):
+        functions.experiments = functions.open_pickle(std.exp_path)
         self.experiment_combo.configure(values=functions.experiments)
 
     def handle_openbutton(self):
@@ -135,6 +135,7 @@ class CetusPCR(tk.Frame):
         new_experiment.name = name
         if new_experiment.name is not None:
             functions.experiments.append(new_experiment)
+            functions.dump_pickle(std.exp_path, functions.experiments)
             self.experiment_combo.configure(values=functions.experiments)
 
             newroot = tk.Tk()
@@ -151,6 +152,7 @@ class CetusPCR(tk.Frame):
                                            'Você tem certeza?')
         if delete:
             functions.experiments.pop(self.experiment_combo.current())
+            functions.dump_pickle(std.exp_path, functions.experiments)
             print(functions.experiments)
             self.experiment_combo.configure(values=functions.experiments)
             self.experiment_combo.delete(0, 'end')
@@ -358,6 +360,7 @@ class ExperimentPCR(CetusPCR):
             self.entry_of_options['Entry-Nº de ciclos'].get()
         self.experiment.final_temp = \
             self.entry_of_options['Entry-Temperatura Final'].get()
+        functions.dump_pickle(std.exp_path, functions.experiments)
         messagebox.showinfo('Cetus PCR', 'Experimento salvo!', parent=self)
 
     def handle_back_button(self):
