@@ -18,8 +18,6 @@ import constants as std
 
 import functions
 
-# f = functions.Experiment()
-
 
 class CetusPCR(tk.Frame):
     """Primeira janela do aplicativo.
@@ -35,6 +33,7 @@ class CetusPCR(tk.Frame):
         self.master.protocol('WM_DELETE_WINDOW', self.close_window)
         self.pack()
         self.pack_propagate(False)
+        self.master.focus_force()
         self.configure(width=1000,
                        height=660,
                        bg=std.bg,
@@ -114,6 +113,8 @@ class CetusPCR(tk.Frame):
                                           anchor='s',
                                           bordermode='outside')
 
+        self.experiment_combo.current(0)
+
     def show_experiments(self):
         self.experiment_combo.configure(values=functions.experiments)
 
@@ -178,7 +179,6 @@ class ExperimentPCR(CetusPCR):
     def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
         self.experiment = functions.experiments[exp_index]
-        self.master.focus_force()
 
     def _widgets(self):
         self.entry_of_options = {}
@@ -297,7 +297,18 @@ class ExperimentPCR(CetusPCR):
                                           font=(std.font_buttons, 15, 'bold'))
             self.buttons[but].pack(side='left',
                                    padx=15)
-        self.buttons['Salvar'].configure(command=self.edit_experiment)
+        self.buttons['Salvar'].configure(command=self.handle_savebutton)
+
+        self.button_back = tk.Button(master=self,
+                                     text='◄',
+                                     font=(std.font_title, 20, 'bold'),
+                                     bg=std.bg,
+                                     bd=0,
+                                     fg=std.label_color,
+                                     command=self.handle_backbutton)
+        self.button_back.bind('<Enter>', self.on_hover)
+        self.button_back.bind('<Leave>', self.on_leave)
+        self.button_back.place(x=0, y=0)
 
         self.open_experiment()
 
@@ -319,7 +330,13 @@ class ExperimentPCR(CetusPCR):
         self.entry_of_options['Entry-Temperatura Final'] \
             .insert(0, self.experiment.final_temp)
 
-    def edit_experiment(self):
+    def on_hover(self, event=None):
+        self.button_back['bg'] = std.bd
+
+    def on_leave(self, event=None):
+        self.button_back['bg'] = std.bg
+
+    def handle_savebutton(self):
         self.experiment.denaturation_c = \
             self.entry_of_options['Entry-Desnaturação Temperatura'].get()
         self.experiment.denaturation_t = \
@@ -338,3 +355,8 @@ class ExperimentPCR(CetusPCR):
             self.entry_of_options['Entry-Temperatura Final'].get()
         messagebox.showinfo('Cetus PCR', 'Experimento salvo!', parent=self)
 
+    def handle_backbutton(self):
+        newroot = tk.Tk()
+        new = CetusPCR(newroot)
+        new._widgets()
+        self.close_window()
