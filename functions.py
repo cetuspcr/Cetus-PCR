@@ -1,6 +1,5 @@
 import pickle
 from tkinter import simpledialog
-import tkinter as tk
 
 import constants as std
 

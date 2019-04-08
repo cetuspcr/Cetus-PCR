@@ -13,12 +13,10 @@ janela.
 """
 
 import tkinter as tk
-from tkinter import ttk, simpledialog, messagebox
+from tkinter import ttk, messagebox
 import constants as std
 
 import functions
-
-# f = functions.Experiment()
 
 
 class CetusPCR(tk.Frame):
@@ -32,8 +30,10 @@ class CetusPCR(tk.Frame):
         self.master.geometry('+200+10')
         self.master.title('Cetus PCR')
         self.master.iconbitmap(std.icon)
+        self.master.protocol('WM_DELETE_WINDOW', self.close_window)
         self.pack()
         self.pack_propagate(False)
+        self.master.focus_force()
         self.configure(width=1000,
                        height=660,
                        bg=std.bg,
@@ -47,9 +47,10 @@ class CetusPCR(tk.Frame):
     def _widgets(self):
         """Cria os widgets da janela.
 
-        A razão para qual os widgets são colocador em outro método é que essa classe
-        será futuramente herdada pela janela ExperimentPCR e não é suposta  para\
-        copiar todos os widgets para outra janela, apenas as opções de quadro.
+        A razão para qual os widgets são colocador em outro método é que essa
+        classe será futuramente herdada pela janela ExperimentPCR e não é
+        suposta para copiar todos os widgets para outra janela, apenas as
+        opções de quadro.
         """
         # Criar os widgets
         self.options_frame = tk.Frame(master=self,
@@ -80,6 +81,7 @@ class CetusPCR(tk.Frame):
             self.buttons[but].pack(pady=14)
         self.buttons['Abrir'].configure(command=self.handle_openbutton)
         self.buttons['Novo'].configure(command=self.handle_newbutton)
+        self.buttons['Excluir'].configure(command=self.handle_deletebutton)
 
         self.experiment_combo = ttk.Combobox(master=self,
                                              width=30,
@@ -87,7 +89,8 @@ class CetusPCR(tk.Frame):
                                              values=['Experimento 01'])
 
         self.experiment_combo_title = tk.Label(master=self,
-                                               font=(std.font_title, 25, 'bold'),
+                                               font=(std.font_title, 25,
+                                                     'bold'),
                                                text='Selecione o experimento:',
                                                fg=std.label_color,
                                                bg=std.bg)
@@ -112,6 +115,8 @@ class CetusPCR(tk.Frame):
                                           anchor='s',
                                           bordermode='outside')
 
+        self.experiment_combo.current(0)
+
     def show_experiments(self):
         self.experiment_combo.configure(values=functions.experiments)
 
@@ -123,7 +128,6 @@ class CetusPCR(tk.Frame):
         self.master.destroy()
 
     def handle_newbutton(self):
-        print(functions.StringDialog.__dict__)
         new_experiment = functions.Experiment()
         name = functions.ask_string('Novo Experimento', 'Digite o nome do'
                                                         ' experimento:',
@@ -142,6 +146,20 @@ class CetusPCR(tk.Frame):
             messagebox.showerror('Novo Experimento', 'O nome não pode estar'
                                                      ' vazio')
 
+    def handle_deletebutton(self):
+        delete = messagebox.askyesnocancel('Deletar experimento',
+                                           'Você tem certeza?')
+        if delete:
+            functions.experiments.pop(self.experiment_combo.current())
+            print(functions.experiments)
+            self.experiment_combo.configure(values=functions.experiments)
+            self.experiment_combo.delete(0, 'end')
+
+    def close_window(self):
+        functions.dump_pickle(std.exp_path, functions.experiments)
+        self.master.destroy()
+
+
 class ExperimentPCR(CetusPCR):
     """Lida com o experimento dado pela janela CetusPCR.
 
@@ -158,14 +176,12 @@ class ExperimentPCR(CetusPCR):
 
     Herdar do CetusPCR cria automaticamente uma janela
     com as mesmas configurações de quadro.
-    Isso é util pois a janela deve ter a mesma aparência, título, ícone e tamanho,
-    porém, com widgets e opções diferentes.
+    Isso é util pois a janela deve ter a mesma aparência, título, ícone e
+    tamanho, porém, com widgets e opções diferentes.
     """
     def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
-        self.master.protocol('WM_DELETE_WINDOW', self.close_window)
         self.experiment = functions.experiments[exp_index]
-        self.master.focus_force()
 
     def _widgets(self):
         self.entry_of_options = {}
@@ -207,7 +223,8 @@ class ExperimentPCR(CetusPCR):
                              bg=std.bg,
                              fg=std.label_color)
             self.entry_of_options['Label-'+stage] = label
-            label.place(in_=self.entry_of_options['Entry-'+stage+' Temperatura'],
+            label.place(in_=self.entry_of_options['Entry-'+stage
+                                                  + ' Temperatura'],
                         anchor='sw',
                         y=-10,
                         bordermode='outside')
@@ -259,7 +276,8 @@ class ExperimentPCR(CetusPCR):
                                       highlightcolor=std.bd,
                                       highlightbackground=std.bd,
                                       highlightthickness=std.bd_width)
-        self.buttons_frame.place(in_=self.entry_of_options['Entry-Temperatura Final'],
+        self.buttons_frame.place(in_=self.
+                                 entry_of_options['Entry-Temperatura Final'],
                                  anchor='n',
                                  relx=0.5,
                                  rely=1,
@@ -280,16 +298,24 @@ class ExperimentPCR(CetusPCR):
         for but in ('Salvar', 'Executar'):
             self.buttons[but] = tk.Button(master=self.buttons_frame,
                                           text=but,
-                                          width=8,
-                                          font=(std.font_buttons, 13,'bold'))
+                                          width=7,
+                                          font=(std.font_buttons, 15, 'bold'))
             self.buttons[but].pack(side='left',
-                                   padx=17)
-        self.buttons['Salvar'].configure(command=self.edit_experiment)
+                                   padx=15)
+        self.buttons['Salvar'].configure(command=self.handle_save_button)
 
-        for key in self.entry_of_options:
-            print(key)
+        self.button_back = tk.Button(master=self,
+                                     text='◄',
+                                     font=(std.font_title, 20, 'bold'),
+                                     bg=std.bg,
+                                     bd=0,
+                                     fg=std.label_color,
+                                     command=self.handle_back_button)
+        self.button_back.bind('<Enter>', self.on_hover)
+        self.button_back.bind('<Leave>', self.on_leave)
+        self.button_back.place(x=0, y=0)
+
         self.open_experiment()
-        # self.experiment.name = 'Test experiment'
 
     def open_experiment(self):
         self.entry_of_options['Entry-Desnaturação Temperatura'] \
@@ -309,7 +335,13 @@ class ExperimentPCR(CetusPCR):
         self.entry_of_options['Entry-Temperatura Final'] \
             .insert(0, self.experiment.final_temp)
 
-    def edit_experiment(self):
+    def on_hover(self, event=None):
+        self.button_back['bg'] = std.bd
+
+    def on_leave(self, event=None):
+        self.button_back['bg'] = std.bg
+
+    def handle_save_button(self):
         self.experiment.denaturation_c = \
             self.entry_of_options['Entry-Desnaturação Temperatura'].get()
         self.experiment.denaturation_t = \
@@ -326,8 +358,10 @@ class ExperimentPCR(CetusPCR):
             self.entry_of_options['Entry-Nº de ciclos'].get()
         self.experiment.final_temp = \
             self.entry_of_options['Entry-Temperatura Final'].get()
+        messagebox.showinfo('Cetus PCR', 'Experimento salvo!', parent=self)
 
-    def close_window(self):
-        functions.dump_pickle(std.exp_path, functions.experiments)
-        self.master.destroy()
-
+    def handle_back_button(self):
+        newroot = tk.Tk()
+        new = CetusPCR(newroot)
+        new._widgets()
+        self.close_window()
