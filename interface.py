@@ -47,9 +47,10 @@ class CetusPCR(tk.Frame):
     def _widgets(self):
         """Cria os widgets da janela.
 
-        A razão para qual os widgets são colocador em outro método é que essa classe
-        será futuramente herdada pela janela ExperimentPCR e não é suposta  para\
-        copiar todos os widgets para outra janela, apenas as opções de quadro.
+        A razão para qual os widgets são colocador em outro método é que essa
+        classe será futuramente herdada pela janela ExperimentPCR e não é
+        suposta para copiar todos os widgets para outra janela, apenas as
+        opções de quadro.
         """
         # Criar os widgets
         self.options_frame = tk.Frame(master=self,
@@ -88,7 +89,8 @@ class CetusPCR(tk.Frame):
                                              values=['Experimento 01'])
 
         self.experiment_combo_title = tk.Label(master=self,
-                                               font=(std.font_title, 25, 'bold'),
+                                               font=(std.font_title, 25,
+                                                     'bold'),
                                                text='Selecione o experimento:',
                                                fg=std.label_color,
                                                bg=std.bg)
@@ -145,7 +147,8 @@ class CetusPCR(tk.Frame):
                                                      ' vazio')
 
     def handle_deletebutton(self):
-        delete = messagebox.askyesnocancel('Deletar experimento', 'Você tem certeza?')
+        delete = messagebox.askyesnocancel('Deletar experimento',
+                                           'Você tem certeza?')
         if delete:
             functions.experiments.pop(self.experiment_combo.current())
             print(functions.experiments)
@@ -173,8 +176,8 @@ class ExperimentPCR(CetusPCR):
 
     Herdar do CetusPCR cria automaticamente uma janela
     com as mesmas configurações de quadro.
-    Isso é util pois a janela deve ter a mesma aparência, título, ícone e tamanho,
-    porém, com widgets e opções diferentes.
+    Isso é util pois a janela deve ter a mesma aparência, título, ícone e
+    tamanho, porém, com widgets e opções diferentes.
     """
     def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
@@ -220,7 +223,8 @@ class ExperimentPCR(CetusPCR):
                              bg=std.bg,
                              fg=std.label_color)
             self.entry_of_options['Label-'+stage] = label
-            label.place(in_=self.entry_of_options['Entry-'+stage+' Temperatura'],
+            label.place(in_=self.entry_of_options['Entry-'+stage
+                                                  + ' Temperatura'],
                         anchor='sw',
                         y=-10,
                         bordermode='outside')
@@ -272,7 +276,8 @@ class ExperimentPCR(CetusPCR):
                                       highlightcolor=std.bd,
                                       highlightbackground=std.bd,
                                       highlightthickness=std.bd_width)
-        self.buttons_frame.place(in_=self.entry_of_options['Entry-Temperatura Final'],
+        self.buttons_frame.place(in_=self.
+                                 entry_of_options['Entry-Temperatura Final'],
                                  anchor='n',
                                  relx=0.5,
                                  rely=1,
@@ -297,7 +302,7 @@ class ExperimentPCR(CetusPCR):
                                           font=(std.font_buttons, 15, 'bold'))
             self.buttons[but].pack(side='left',
                                    padx=15)
-        self.buttons['Salvar'].configure(command=self.handle_savebutton)
+        self.buttons['Salvar'].configure(command=self.handle_save_button)
 
         self.button_back = tk.Button(master=self,
                                      text='◄',
@@ -305,7 +310,7 @@ class ExperimentPCR(CetusPCR):
                                      bg=std.bg,
                                      bd=0,
                                      fg=std.label_color,
-                                     command=self.handle_backbutton)
+                                     command=self.handle_back_button)
         self.button_back.bind('<Enter>', self.on_hover)
         self.button_back.bind('<Leave>', self.on_leave)
         self.button_back.place(x=0, y=0)
@@ -336,7 +341,7 @@ class ExperimentPCR(CetusPCR):
     def on_leave(self, event=None):
         self.button_back['bg'] = std.bg
 
-    def handle_savebutton(self):
+    def handle_save_button(self):
         self.experiment.denaturation_c = \
             self.entry_of_options['Entry-Desnaturação Temperatura'].get()
         self.experiment.denaturation_t = \
@@ -355,7 +360,7 @@ class ExperimentPCR(CetusPCR):
             self.entry_of_options['Entry-Temperatura Final'].get()
         messagebox.showinfo('Cetus PCR', 'Experimento salvo!', parent=self)
 
-    def handle_backbutton(self):
+    def handle_back_button(self):
         newroot = tk.Tk()
         new = CetusPCR(newroot)
         new._widgets()
