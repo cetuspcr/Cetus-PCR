@@ -184,6 +184,7 @@ class ExperimentPCR(CetusPCR):
     def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
         self.experiment = functions.experiments[exp_index]
+        self.vcmd = self.master.register(functions.validate_entry)
 
     def _widgets(self):
         self.entry_of_options = {}
@@ -196,8 +197,11 @@ class ExperimentPCR(CetusPCR):
                                  width=3,
                                  bd=1,
                                  highlightcolor=std.bd,
-                                 highlightthickness=std.bd_width)
-                key = 'Entry-' + stage + ' ' + option
+                                 highlightthickness=std.bd_width,
+                                 validate='key',
+                                 validatecommand=(self.vcmd, '%P')
+                                 )
+                key = stage + ' ' + option
                 self.entry_of_options[key] = entry
                 entry.place(relx=0.2,
                             rely=0.2,
@@ -224,29 +228,29 @@ class ExperimentPCR(CetusPCR):
                              text=stage+':',
                              bg=std.bg,
                              fg=std.label_color)
-            self.entry_of_options['Label-'+stage] = label
-            label.place(in_=self.entry_of_options['Entry-'+stage
-                                                  + ' Temperatura'],
+            # self.entry_of_options['Label-'+stage] = label
+            label.place(in_=self.entry_of_options[stage + ' Temperatura'],
                         anchor='sw',
                         y=-10,
                         bordermode='outside')
 
         self.gapy = 20
         for option in ('Nº de ciclos', 'Temperatura Final'):
-            key = 'Entry-' + option
+            key = option
             entry = tk.Entry(master=self,
                              font=(std.font_title, 30),
                              width=3,
                              bd=1,
                              highlightcolor=std.bd,
-                             highlightthickness=std.bd_width)
+                             highlightthickness=std.bd_width,
+                             validate='key',
+                             validatecommand=(self.vcmd, '%s', '%P'))
             entry.place(relx=0.7,
                         rely=0.2,
                         y=self.gapy)
             self.gapy += 120
             self.entry_of_options[key] = entry
 
-            key = 'Label-' + option
             label = tk.Label(master=self,
                              font=(std.font_title, 20, 'bold'),
                              text=option+':',
@@ -256,7 +260,7 @@ class ExperimentPCR(CetusPCR):
                         anchor='s',
                         relx=0.5,
                         y=-10)
-            self.entry_of_options[key] = label
+
             if option == 'Temperatura Final':
                 unit_label = tk.Label(master=self,
                                       font=(std.font_title, 14, 'bold'),
@@ -279,7 +283,7 @@ class ExperimentPCR(CetusPCR):
                                       highlightbackground=std.bd,
                                       highlightthickness=std.bd_width)
         self.buttons_frame.place(in_=self.
-                                 entry_of_options['Entry-Temperatura Final'],
+                                 entry_of_options['Temperatura Final'],
                                  anchor='n',
                                  relx=0.5,
                                  rely=1,
@@ -320,21 +324,21 @@ class ExperimentPCR(CetusPCR):
         self.open_experiment()
 
     def open_experiment(self):
-        self.entry_of_options['Entry-Desnaturação Temperatura'] \
+        self.entry_of_options['Desnaturação Temperatura'] \
             .insert(0, self.experiment.denaturation_c)
-        self.entry_of_options['Entry-Desnaturação Tempo'] \
+        self.entry_of_options['Desnaturação Tempo'] \
             .insert(0, self.experiment.denaturation_t)
-        self.entry_of_options['Entry-Anelamento Temperatura'] \
+        self.entry_of_options['Anelamento Temperatura'] \
             .insert(0, self.experiment.annealing_c)
-        self.entry_of_options['Entry-Anelamento Tempo'] \
+        self.entry_of_options['Anelamento Tempo'] \
             .insert(0, self.experiment.annealing_t)
-        self.entry_of_options['Entry-Extensão Temperatura'] \
+        self.entry_of_options['Extensão Temperatura'] \
             .insert(0, self.experiment.extension_c)
-        self.entry_of_options['Entry-Extensão Tempo'] \
+        self.entry_of_options['Extensão Tempo'] \
             .insert(0, self.experiment.extension_t)
-        self.entry_of_options['Entry-Nº de ciclos'] \
+        self.entry_of_options['Nº de ciclos'] \
             .insert(0, self.experiment.number_cycles)
-        self.entry_of_options['Entry-Temperatura Final'] \
+        self.entry_of_options['Temperatura Final'] \
             .insert(0, self.experiment.final_temp)
 
     def on_hover(self, event=None):
@@ -345,21 +349,21 @@ class ExperimentPCR(CetusPCR):
 
     def handle_save_button(self):
         self.experiment.denaturation_c = \
-            self.entry_of_options['Entry-Desnaturação Temperatura'].get()
+            self.entry_of_options['Desnaturação Temperatura'].get()
         self.experiment.denaturation_t = \
-            self.entry_of_options['Entry-Desnaturação Tempo'].get()
+            self.entry_of_options['Desnaturação Tempo'].get()
         self.experiment.annealing_c = \
-            self.entry_of_options['Entry-Anelamento Temperatura'].get()
+            self.entry_of_options['Anelamento Temperatura'].get()
         self.experiment.annealing_t = \
-            self.entry_of_options['Entry-Anelamento Tempo'].get()
+            self.entry_of_options['Anelamento Tempo'].get()
         self.experiment.extension_c = \
-            self.entry_of_options['Entry-Extensão Temperatura'].get()
+            self.entry_of_options['Extensão Temperatura'].get()
         self.experiment.extension_t = \
-            self.entry_of_options['Entry-Extensão Tempo'].get()
+            self.entry_of_options['Extensão Tempo'].get()
         self.experiment.number_cycles = \
-            self.entry_of_options['Entry-Nº de ciclos'].get()
+            self.entry_of_options['Nº de ciclos'].get()
         self.experiment.final_temp = \
-            self.entry_of_options['Entry-Temperatura Final'].get()
+            self.entry_of_options['Temperatura Final'].get()
         functions.dump_pickle(std.exp_path, functions.experiments)
         messagebox.showinfo('Cetus PCR', 'Experimento salvo!', parent=self)
 
