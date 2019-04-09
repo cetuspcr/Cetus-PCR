@@ -42,6 +42,7 @@ class CetusPCR(tk.Frame):
                        highlightcolor=std.bd,
                        highlightbackground=std.bd,
                        highlightthickness=std.bd_width)
+        self.widgets = self._widgets
 
     def _widgets(self):
         """Cria os widgets da janela.
