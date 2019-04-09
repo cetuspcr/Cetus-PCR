@@ -53,6 +53,11 @@ conexão entre o software em python e o microcontrolador.
 Considerando que a interface ainda não está pronta para lançamento, aqueles que querem testa-lá devem rodar no próprio ambiente do python.
 Para isso basta seguir os seguintes passos:
 
+###Pre-requisitos
+* Cetus PCR necessita apenas do Python 3 instalado. Python 2 não é suportado.
+   * É necessário que o Python esteja no Path do seu sistema (opção configurada na hora da instalação). Caso precise adicionar manualmente basta seguir as [instruções](https://python.org.br/instalacao-windows/).
+   
+
 ### Configurar um novo ambiente virtual
 Após clonar/baixar o repositório do GitHub, é recomendado criar um ambiente virtual para a aplicação.
 
