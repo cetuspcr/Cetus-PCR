@@ -244,7 +244,7 @@ class ExperimentPCR(CetusPCR):
                              highlightcolor=std.bd,
                              highlightthickness=std.bd_width,
                              validate='key',
-                             validatecommand=(self.vcmd, '%s', '%P'))
+                             validatecommand=(self.vcmd, '%P'))
             entry.place(relx=0.7,
                         rely=0.2,
                         y=self.gapy)
@@ -316,7 +316,8 @@ class ExperimentPCR(CetusPCR):
                                      bg=std.bg,
                                      bd=0,
                                      fg=std.label_color,
-                                     command=self.handle_back_button)
+                                     command=self.handle_back_button,
+                                     activebackground='#555A5C')
         self.button_back.bind('<Enter>', self.on_hover)
         self.button_back.bind('<Leave>', self.on_leave)
         self.button_back.place(x=0, y=0)
