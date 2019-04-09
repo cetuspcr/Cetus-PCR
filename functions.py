@@ -30,6 +30,7 @@ class StringDialog(simpledialog._QueryString):
 
 
 def ask_string(title, prompt, **kargs):
+    # Créditos ao TeamSpen210 do Reddit
     d = StringDialog(title, prompt, **kargs)
     return d.result
 
