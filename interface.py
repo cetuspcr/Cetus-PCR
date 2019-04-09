@@ -125,7 +125,7 @@ class CetusPCR(tk.Frame):
         newroot = tk.Tk()
         new = ExperimentPCR(newroot,
                             self.experiment_combo.current())
-        new._widgets()
+        new.widgets()
         self.master.destroy()
 
     def handle_newbutton(self):
@@ -142,7 +142,7 @@ class CetusPCR(tk.Frame):
             newroot = tk.Tk()
             new = ExperimentPCR(newroot,
                                 functions.experiments.index(new_experiment))
-            new._widgets()
+            new.widgets()
             self.master.destroy()
         elif name is None:
             messagebox.showerror('Novo Experimento', 'O nome não pode estar'
