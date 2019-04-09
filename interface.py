@@ -122,11 +122,12 @@ class CetusPCR(tk.Frame):
         self.experiment_combo.configure(values=functions.experiments)
 
     def handle_openbutton(self):
-        newroot = tk.Tk()
-        new = ExperimentPCR(newroot,
-                            self.experiment_combo.current())
-        new.widgets()
-        self.master.destroy()
+        index = self.experiment_combo.current()
+        if index >= 0:
+            newroot = tk.Tk()
+            new = ExperimentPCR(newroot, index)
+            new.widgets()
+            self.master.destroy()
 
     def handle_newbutton(self):
         new_experiment = functions.Experiment()
@@ -202,7 +203,7 @@ class ExperimentPCR(CetusPCR):
                                  validate='key',
                                  validatecommand=(self.vcmd, '%P')
                                  )
-                key = stage + ' ' + option
+                key = f'{stage} {option}'
                 self.entry_of_options[key] = entry
                 entry.place(relx=0.2,
                             rely=0.2,
@@ -229,8 +230,7 @@ class ExperimentPCR(CetusPCR):
                              text=stage+':',
                              bg=std.bg,
                              fg=std.label_color)
-            # self.entry_of_options['Label-'+stage] = label
-            label.place(in_=self.entry_of_options[stage + ' Temperatura'],
+            label.place(in_=self.entry_of_options[f'{stage} Temperatura'],
                         anchor='sw',
                         y=-10,
                         bordermode='outside')
@@ -269,7 +269,6 @@ class ExperimentPCR(CetusPCR):
                                       bg=std.bg,
                                       fg=std.label_color)
                 unit_label.place(in_=entry,
-                                 # anchor='ne',
                                  relx=1,
                                  rely=0,
                                  x=10)
@@ -326,6 +325,7 @@ class ExperimentPCR(CetusPCR):
         self.open_experiment()
 
     def open_experiment(self):
+        print(self.experiment)
         self.entry_of_options['Desnaturação Temperatura'] \
             .insert(0, self.experiment.denaturation_c)
         self.entry_of_options['Desnaturação Tempo'] \
@@ -372,5 +372,5 @@ class ExperimentPCR(CetusPCR):
     def handle_back_button(self):
         newroot = tk.Tk()
         new = CetusPCR(newroot)
-        new._widgets()
+        new.widgets()
         self.close_window()
