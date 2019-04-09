@@ -22,6 +22,18 @@ class Experiment:
         return self.name
 
 
+class StringDialog(simpledialog._QueryString):
+    # Créditos ao TeamSpen210 do Reddit
+    def body(self, master):
+        super().body(master)
+        self.iconbitmap(std.icon)
+
+
+def ask_string(title, prompt, **kargs):
+    d = StringDialog(title, prompt, **kargs)
+    return d.result
+
+
 def open_pickle(path):
     try:
         with open(path, 'rb') as infile:
@@ -36,13 +48,15 @@ def dump_pickle(path, obj):
         pickle.dump(obj, outfile)
 
 
-class StringDialog(simpledialog._QueryString):
-    # Créditos ao TeamSpen210 do Reddit
-    def body(self, master):
-        super().body(master)
-        self.iconbitmap(std.icon)
+def validate_entry(new_text):
+    if new_text == '':
+        return True
+    try:
+        int(new_text)
+        if len(new_text) <= 3:
+            return True
+        else:
+            return False
+    except ValueError:
+        return False
 
-
-def ask_string(title, prompt, **kargs):
-    d = StringDialog(title, prompt, **kargs)
-    return d.result
