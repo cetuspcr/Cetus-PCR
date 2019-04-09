@@ -48,3 +48,35 @@ Estruturalmente, a máquina é composta por uma pastilha peltier (entre outros d
 Toda a interface está sendo desenvolvida em Python 3.7 (`tkinter`) e a comunicação via porta
 serial se utilizando da biblioteca `PySerial`, tal biblioteca possibilita a
 conexão entre o software em python e o microcontrolador.
+
+## Como iniciar a interface Cetus PCR
+Considerando que a interface ainda não está pronta para lançamento, aqueles que querem testa-lá devem rodar no próprio ambiente do python.
+Para isso basta seguir os seguintes passos:
+
+### Configurar um novo ambiente virtual
+Após clonar/baixar o repositório do GitHub, é recomendado criar um ambiente virtual para a aplicação.
+
+Primeiro, tenha certeza de que possuí o Python 3 e o pip corretamente instalados e configurados em sua máquina, 
+para isso rode os seguintes comandos no seu Command Prompt:
+
+```
+python3 --version
+pip3 --version
+```
+
+Agora, abra o Command Prompt no diretório do ProjetoCetus e execute os seguintes comandos:
+
+```
+python3 -m venv venv
+venv/Scripts/activate.bat
+```
+
+Se tudo estiver corretamente configurado, seu prompt deverá ter um `(venv)` escrito na frente de cada linha.
+
+Por fim, instale as dependências do Projeto:
+
+```
+pip install -r requirements.txt
+```
+
+Agora você já deve ser capaz de iniciar a aplicação rodando o arquivo `Cetus PCR.py`.
