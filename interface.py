@@ -1,15 +1,17 @@
 """Design para o aplicativo Cetus PCR.
 
-"Interface" armazena todas as informações sobre os widgets do aplicativo.
+"Interface" armazena todas as informações sobre os widgets do
+aplicativo.
 
-A estrutura principal do programa é baseada principalmente nessas duas classes:
+A estrutura principal do programa é baseada principalmente nessas duas
+classes:
 class CetusPCR -> Seleciona/Cria um experimento;
 class ExperimentPCR -> Edita/Executa o experimento selecionado;
 
 Todas as classes de janelas herdadas da biblioteca tk.Frame.
 Isso é feito apenas por propósitos de design,
-uma vez que facilita a colocação das bordas e organização dos widgets dentro da
-janela.
+uma vez que facilita a colocação das bordas e organização dos widgets
+dentro da janela.
 """
 
 import tkinter as tk
@@ -22,7 +24,8 @@ import functions
 class CetusPCR(tk.Frame):
     """Primeira janela do aplicativo.
 
-    Nessa janela o usuário pode selecionar, deletar ou criar um experimento.
+    Nessa janela o usuário pode selecionar, deletar ou criar um
+    experimento.
     """
     def __init__(self, master: tk.Tk):
         super().__init__(master)
@@ -47,10 +50,11 @@ class CetusPCR(tk.Frame):
     def _widgets(self):
         """Cria os widgets da janela.
 
-        A razão para qual os widgets são colocador em outro método é que essa
-        classe será futuramente herdada pela janela ExperimentPCR e não é
-        suposta para copiar todos os widgets para outra janela, apenas as
-        opções de quadro.
+        A razão para qual os widgets são colocador em outro método é
+        que essa classe será futuramente herdada pela janela
+        ExperimentPCR e não é
+        suposta para copiar todos os widgets para outra janela, apenas
+        as opções de quadro.
         """
         # Criar os widgets
         self.options_frame = tk.Frame(master=self,
@@ -171,8 +175,8 @@ class ExperimentPCR(CetusPCR):
     Seu estado é definido pelas instruções dadas pelo usuário
     na janela anterior.
 
-    Abrir -> Widgets de entrada são desabilitados com as opções do experimento
-    dentro deles.
+    Abrir -> Widgets de entrada são desabilitados com as opções do
+    experimento dentro deles.
     Novo -> Widgets de entrada são habilitados e esvaziados.
 
     Se o usuário escolher a opção Abrir, ainda é possível
@@ -180,8 +184,8 @@ class ExperimentPCR(CetusPCR):
 
     Herdar do CetusPCR cria automaticamente uma janela
     com as mesmas configurações de quadro.
-    Isso é util pois a janela deve ter a mesma aparência, título, ícone e
-    tamanho, porém, com widgets e opções diferentes.
+    Isso é util pois a janela deve ter a mesma aparência, título, ícone
+    e tamanho, porém, com widgets e opções diferentes.
     """
     def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
@@ -274,7 +278,7 @@ class ExperimentPCR(CetusPCR):
                                  x=10)
 
         self.buttons_frame = tk.Frame(master=self,
-                                      width=250,
+                                      width=230,
                                       height=100,
                                       bg=std.bg,
                                       bd=0,
@@ -305,7 +309,8 @@ class ExperimentPCR(CetusPCR):
             self.buttons[but] = tk.Button(master=self.buttons_frame,
                                           text=but,
                                           width=7,
-                                          font=(std.font_buttons, 15, 'bold'))
+                                          relief=std.relief,
+                                          font=(std.font_buttons, 13, 'bold'))
             self.buttons[but].pack(side='left',
                                    padx=15)
         self.buttons['Salvar'].configure(command=self.handle_save_button)
