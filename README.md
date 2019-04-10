@@ -59,7 +59,8 @@ Para isso basta seguir os seguintes passos:
    
 
 ### Configurar um novo ambiente virtual
-Após clonar/baixar o repositório do GitHub, é recomendado criar um ambiente virtual para a aplicação.
+Faça o download do repositório ProjetoCetus do GitHub.
+Após isso, é recomendado criar um ambiente virtual para a aplicação.
 
 Primeiro, tenha certeza de que possuí o Python 3 e o pip corretamente instalados e configurados em sua máquina, 
 para isso rode os seguintes comandos no seu Command Prompt:
