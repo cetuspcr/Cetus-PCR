@@ -27,6 +27,7 @@ class CetusPCR(tk.Frame):
     Nessa janela o usuário pode selecionar, deletar ou criar um
     experimento.
     """
+
     def __init__(self, master: tk.Tk):
         super().__init__(master)
         self.master = master
@@ -52,9 +53,8 @@ class CetusPCR(tk.Frame):
 
         A razão para qual os widgets são colocador em outro método é
         que essa classe será futuramente herdada pela janela
-        ExperimentPCR e não é
-        suposta para copiar todos os widgets para outra janela, apenas
-        as opções de quadro.
+        ExperimentPCR e não é suposta para copiar todos os widgets para
+        outra janela, apenas as opções de quadro.
         """
         # Criar os widgets
         self.options_frame = tk.Frame(master=self,
@@ -172,21 +172,22 @@ class ExperimentPCR(CetusPCR):
     """Lida com o experimento dado pela janela CetusPCR.
 
     Essa janela é composto por alguns widgets da classe tk.Entry.
-    Seu estado é definido pelas instruções dadas pelo usuário
-    na janela anterior.
+    Seu estado é definido pelas instruções dadas pelo usuário na janela
+    anterior.
 
     Abrir -> Widgets de entrada são desabilitados com as opções do
     experimento dentro deles.
     Novo -> Widgets de entrada são habilitados e esvaziados.
 
-    Se o usuário escolher a opção Abrir, ainda é possível
-    ativar os widgets de entrada pressionando o botão Editar.
+    Se o usuário escolher a opção Abrir, ainda é possível ativar os
+    widgets de entrada pressionando o botão Editar.
 
-    Herdar do CetusPCR cria automaticamente uma janela
-    com as mesmas configurações de quadro.
+    Herdar do CetusPCR cria automaticamente uma janela com as mesmas
+    configurações de quadro.
     Isso é util pois a janela deve ter a mesma aparência, título, ícone
     e tamanho, porém, com widgets e opções diferentes.
     """
+
     def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
         self.experiment = functions.experiments[exp_index]

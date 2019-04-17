@@ -83,7 +83,7 @@ def validate_entry(new_text):
     :param new_text: Passada pelo próprio widget de entrada.
     :return: boolean - Retorna pro widget se a entrada é ou não válida.
     """
-    if new_text == '':
+    if new_text == '':  # Se "backspace"
         return True
     try:
         int(new_text)
