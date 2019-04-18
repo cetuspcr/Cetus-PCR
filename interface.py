@@ -58,8 +58,8 @@ class CetusPCR(tk.Frame):
         """
         # Criar os widgets
         self.options_frame = tk.Frame(master=self,
-                                      width=250,
-                                      height=200,
+                                      width=210,
+                                      height=210,
                                       bg=std.bg,
                                       bd=0,
                                       relief=std.relief,
@@ -76,13 +76,13 @@ class CetusPCR(tk.Frame):
         self.buttons = {}
         # Criar e posicionar 3 botões dentro do "options_frame"
         for but in ('Abrir', 'Novo', 'Excluir'):
-            self.buttons[but] = tk.Button(master=self.options_frame,
-                                          font=(std.font_buttons, 13, 'bold'),
-                                          text=but,
-                                          relief=std.relief,
-                                          width=8,
-                                          height=0)
-            self.buttons[but].pack(pady=14)
+            self.buttons[but] = MyButton(master=self.options_frame,
+                                         font=(std.font_buttons, 13, 'bold'),
+                                         text=but,
+                                         relief=std.relief,
+                                         width=8,
+                                         height=0)
+            self.buttons[but].frame.pack(pady=14)
         self.buttons['Abrir'].configure(command=self.handle_openbutton)
         self.buttons['Novo'].configure(command=self.handle_newbutton)
         self.buttons['Excluir'].configure(command=self.handle_deletebutton)
@@ -194,6 +194,14 @@ class ExperimentPCR(CetusPCR):
         self.vcmd = self.master.register(functions.validate_entry)
 
     def _widgets(self):
+        self.title = tk.Label(master=self,
+                              font=(std.font_title, 40, 'bold'),
+                              fg=std.bd,
+                              bg=std.bg,
+                              text=self.experiment.name)
+        self.title.place(rely=0,
+                         relx=0.1)
+
         self.entry_of_options = {}
         self.gapy = 20
         for stage in ('Desnaturação', 'Anelamento', 'Extensão'):
@@ -331,7 +339,6 @@ class ExperimentPCR(CetusPCR):
         self.open_experiment()
 
     def open_experiment(self):
-        print(self.experiment)
         self.entry_of_options['Desnaturação Temperatura'] \
             .insert(0, self.experiment.denaturation_c)
         self.entry_of_options['Desnaturação Tempo'] \
