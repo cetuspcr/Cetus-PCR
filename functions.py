@@ -1,5 +1,8 @@
 import pickle
-from tkinter import simpledialog
+import _thread as thread
+from tkinter import simpledialog, messagebox
+
+import serial
 
 import constants as std
 
@@ -39,9 +42,9 @@ class StringDialog(simpledialog._QueryString):
         self.iconbitmap(std.icon)
 
 
-def ask_string(title, prompt, **kargs):
+def ask_string(title, prompt, **kwargs):
     # Créditos ao TeamSpen210 do Reddit
-    d = StringDialog(title, prompt, **kargs)
+    d = StringDialog(title, prompt, **kwargs)
     return d.result
 
 
@@ -94,3 +97,43 @@ def validate_entry(new_text):
     except ValueError:
         return False
 
+
+class ArduinoPCR:
+    def __init__(self, port, baudrate, timeout,
+                 experiment: Experiment = None):
+        self.experiment = experiment
+        self.reading = ''
+
+        try:
+            self.port_pcr = serial.Serial(port, baudrate, timeout=timeout)
+            self.is_connected = True
+            print('Connection Successfully. Initializing Serial Monitor (SM)')
+        except serial.SerialException:
+            self.port_pcr = None
+            self.is_connected = False
+            print('Connection Failed')
+
+    def run_experiment(self):
+        message = '<running: ' + self.experiment.name + '>'
+        self.port_pcr.write(b'%a' % message)
+
+
+class SerialMonitor:
+    def __init__(self, device: ArduinoPCR):
+        self.device = device
+        if self.device.is_connected:
+            self.thread = thread.start_new_thread(self.start_monitor, ())
+
+    def start_monitor(self):
+        while 1:
+            # if self.device.port_pcr.in_waiting:
+                try:
+                    self.device.reading = self.device.port_pcr.readline()
+                    print(f'(SM) {self.device.reading}')
+                except serial.SerialException:
+                    messagebox.showerror('Dispositivo desconectado',
+                                         'Ocorreu um erro ao se comunicar com '
+                                         'o CetusPCR. Verifique a conexão e '
+                                         'reinicie o aplicativo.')
+                    self.device.is_connected = False
+                    break

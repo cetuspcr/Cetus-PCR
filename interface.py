@@ -16,9 +16,20 @@ dentro da janela.
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-import constants as std
 
+# import matplotlib.pyplot as plt
+# from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+import constants as std
 import functions
+
+
+def initialize_pcr():
+    global cetus_device
+    cetus_device = functions.ArduinoPCR(port='COM3',
+                                        baudrate=9600,
+                                        timeout=1)
+    functions.SerialMonitor(cetus_device)
 
 
 class CetusPCR(tk.Frame):
@@ -56,6 +67,7 @@ class CetusPCR(tk.Frame):
         ExperimentPCR e não é suposta para copiar todos os widgets para
         outra janela, apenas as opções de quadro.
         """
+
         # Criar os widgets
         self.options_frame = tk.Frame(master=self,
                                       width=210,
@@ -76,13 +88,13 @@ class CetusPCR(tk.Frame):
         self.buttons = {}
         # Criar e posicionar 3 botões dentro do "options_frame"
         for but in ('Abrir', 'Novo', 'Excluir'):
-            self.buttons[but] = MyButton(master=self.options_frame,
-                                         font=(std.font_buttons, 13, 'bold'),
-                                         text=but,
-                                         relief=std.relief,
-                                         width=8,
-                                         height=0)
-            self.buttons[but].frame.pack(pady=14)
+            self.buttons[but] = tk.Button(master=self.options_frame,
+                                          font=(std.font_buttons, 13, 'bold'),
+                                          text=but,
+                                          relief=std.relief,
+                                          width=8,
+                                          height=0)
+            self.buttons[but].pack(pady=14)
         self.buttons['Abrir'].configure(command=self.handle_openbutton)
         self.buttons['Novo'].configure(command=self.handle_newbutton)
         self.buttons['Excluir'].configure(command=self.handle_deletebutton)
@@ -190,8 +202,10 @@ class ExperimentPCR(CetusPCR):
 
     def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
+        self.exp_index = exp_index
         self.experiment = functions.experiments[exp_index]
         self.vcmd = self.master.register(functions.validate_entry)
+        cetus_device.experiment = self.experiment
 
     def _widgets(self):
         self.title = tk.Label(master=self,
@@ -240,7 +254,7 @@ class ExperimentPCR(CetusPCR):
             self.gapy += 120
             label = tk.Label(master=self,
                              font=(std.font_title, 20, 'bold'),
-                             text=stage+':',
+                             text=stage + ':',
                              bg=std.bg,
                              fg=std.label_color)
             label.place(in_=self.entry_of_options[f'{stage} Temperatura'],
@@ -267,7 +281,7 @@ class ExperimentPCR(CetusPCR):
 
             label = tk.Label(master=self,
                              font=(std.font_title, 20, 'bold'),
-                             text=option+':',
+                             text=option + ':',
                              fg=std.label_color,
                              bg=std.bg)
             label.place(in_=entry,
@@ -323,6 +337,7 @@ class ExperimentPCR(CetusPCR):
             self.buttons[but].pack(side='left',
                                    padx=15)
         self.buttons['Salvar'].configure(command=self.handle_save_button)
+        self.buttons['Executar'].configure(command=self.handle_run_button)
 
         self.button_back = tk.Button(master=self,
                                      text='◄',
@@ -387,3 +402,44 @@ class ExperimentPCR(CetusPCR):
         new = CetusPCR(newroot)
         new.widgets()
         self.close_window()
+
+    def handle_run_button(self):
+        if cetus_device.is_connected:
+            cetus_device.run_experiment()
+            new_root = tk.Tk()
+            new_window = MonitorPCR(new_root, self.exp_index)
+            new_window.widgets()
+            self.close_window()
+        else:
+            messagebox.showerror('Executar Experimento',
+                                 'Dispositivo CetusPCR não conectado!',
+                                 parent=self)
+
+
+class MonitorPCR(CetusPCR):
+    def __init__(self, master: tk.Tk, exp_index):
+        super().__init__(master)
+        self.experiment = functions.experiments[exp_index]
+
+    def _widgets(self):
+        self.title = tk.Label(master=self,
+                              text=self.experiment.name,
+                              fg=std.bd,
+                              bg=std.bg,
+                              font=(std.font_title, 35, 'bold'))
+        self.title.pack()
+
+        self.info_label = tk.Label(master=self,
+                                   text=cetus_device.reading,
+                                   fg='white',
+                                   bg=std.bg,
+                                   font=(std.font_title, 25, 'bold'))
+        self.info_label.pack()
+        self.update_text()
+
+    def update_text(self):
+        self.info_label.configure(text=f'Value: {cetus_device.reading}')
+        self.after(1, self.update_text)
+
+
+initialize_pcr()

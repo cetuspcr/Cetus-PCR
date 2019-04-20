@@ -1,5 +1,7 @@
-// Example 3 - Receive with start- and end-marker
-// This example is from Arduino Forum, credits for Robin2
+// Example 3 - Receive with start- and end-markers
+// Script para envio e recebimento de uma forma genérica, pela porta serial
+// Este exemplo foi retirado do fórum oficial do Arduino.
+// Créditos para Robin2
 // http://forum.arduino.cc/index.php?topic=396450.0
 
 const byte numChars = 32;
@@ -9,7 +11,7 @@ boolean newData = false;
 
 void setup() {
     Serial.begin(9600);
-    //Serial.println("<Arduino is ready>");
+    Serial.println("<Arduino is ready>");
 }
 
 void loop() {
@@ -51,7 +53,7 @@ void recvWithStartEndMarkers() {
 
 void showNewData() {
     if (newData == true) {
-        Serial.print("Experiment options: ");
+        Serial.print("This just in ... ");
         Serial.println(receivedChars);
         newData = false;
     }
