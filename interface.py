@@ -59,6 +59,14 @@ class CetusPCR(tk.Frame):
                        highlightthickness=std.bd_width)
         self.widgets = self._widgets
 
+        self.hover_box = tk.Label(master=self,
+                                  text=std.hover_text,
+                                  bg='white',
+                                  font=('Arial', 11, 'italic'),
+                                  anchor='w')
+        self.hover_box.pack(side='bottom',
+                            fill='x')
+
     def _widgets(self):
         """Cria os widgets da janela.
 
@@ -412,7 +420,7 @@ class ExperimentPCR(CetusPCR):
             self.close_window()
         else:
             messagebox.showerror('Executar Experimento',
-                                 'Dispositivo CetusPCR não conectado!',
+                                 'Dispositivo Cetus PCR não conectado!',
                                  parent=self)
 
 

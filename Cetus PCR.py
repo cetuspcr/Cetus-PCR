@@ -5,7 +5,6 @@ import functions
 
 
 if __name__ == '__main__':
-
     root = tk.Tk()
     cetus = interface.CetusPCR(root)
     cetus.widgets()
