@@ -1,26 +1,28 @@
-import sys
+
+import os
+import tkinter
 from cx_Freeze import setup, Executable
 
-base = None
-if sys.platform == 'win32':
-    base = 'Win32GUI'
+os.environ[
+    'TCL_LIBRARY'] = r'C:\Users\Wilson Cazarré\AppData\Local\Programs\Python\Python37-32\tcl\tcl8.6'
+os.environ[
+    'TK_LIBRARY'] = r'C:\Users\Wilson Cazarré\AppData\Local\Programs\Python\Python37-32\tcl\tk8.6'
 
 executables = [Executable('Cetus PCR.py',
-                          base=base,
+                          base='Win32GUI',
                           shortcutName='Cetus PCR',
-                          shortcutDir='DesktopFolder'),
-               Executable('functions.py', base=base),
-               Executable('interace.py', base=base)]
-
-options = {'build_exe': {
-    {'includes': ['tkinter', 'pyserial', 'matplotlib']},
-    {'include_files': ['assets/cetus.ico'],
-     'include_msvcr': True}}}
-
+                          shortcutDir='DesktopFolder',
+                          icon='assets/cetus.ico'),
+               Executable('functions.py', base='Win32GUI'),
+               Executable('interface.py', base='Win32GUI')]
 
 setup(
     name='ProjetoCetus',
-    version='v0.1-alpha',
+    version='0.1',
     executables=executables,
-    options=options
+    options={'build_exe':
+                 {'includes': ['tkinter', 'serial', 'matplotlib'],
+                  'include_files': ['assets/cetus.ico', 'assets/tcl86t.dll',
+                                    'assets/tk86t.dll'],
+                  'include_msvcr': True, }}
 )

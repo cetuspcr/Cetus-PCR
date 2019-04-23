@@ -59,6 +59,11 @@ def open_pickle(path):
             return newlist
     except FileNotFoundError:
         return []
+    except PermissionError:
+        messagebox.showerror('Acesso Negado',
+                             'Erro com permissões, '
+                             'execute o programa como administrador '
+                             'e tente novamente.')
 
 
 def dump_pickle(path, obj):
@@ -68,8 +73,14 @@ def dump_pickle(path, obj):
     :param path: O caminho para salvar o objeto.
     :param obj: O objeto a ser salvo.
     """
-    with open(path, 'wb') as outfile:
-        pickle.dump(obj, outfile)
+    try:
+        with open(path, 'wb') as outfile:
+            pickle.dump(obj, outfile)
+    except PermissionError:
+        messagebox.showerror('Acesso Negado',
+                             'Erro com permissões, '
+                             'execute o programa como administrador '
+                             'e tente novamente.')
 
 
 def validate_entry(new_text):
