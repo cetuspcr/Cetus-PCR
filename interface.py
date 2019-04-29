@@ -1,29 +1,44 @@
 """Design para o aplicativo Cetus PCR.
 
-"Interface" armazena todas as informações sobre os widgets do aplicativo.
+"Interface" armazena todas as informações sobre os widgets do
+aplicativo.
 
-A estrutura principal do programa é baseada principalmente nessas duas classes:
+A estrutura principal do programa é baseada principalmente nessas duas
+classes:
 class CetusPCR -> Seleciona/Cria um experimento;
 class ExperimentPCR -> Edita/Executa o experimento selecionado;
 
 Todas as classes de janelas herdadas da biblioteca tk.Frame.
 Isso é feito apenas por propósitos de design,
-uma vez que facilita a colocação das bordas e organização dos widgets dentro da
-janela.
+uma vez que facilita a colocação das bordas e organização dos widgets
+dentro da janela.
 """
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-import constants as std
 
+# import matplotlib.pyplot as plt
+# from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+import constants as std
 import functions
+
+
+def initialize_pcr():
+    global cetus_device
+    cetus_device = functions.ArduinoPCR(port='COM3',
+                                        baudrate=9600,
+                                        timeout=1)
+    functions.SerialMonitor(cetus_device)
 
 
 class CetusPCR(tk.Frame):
     """Primeira janela do aplicativo.
 
-    Nessa janela o usuário pode selecionar, deletar ou criar um experimento.
+    Nessa janela o usuário pode selecionar, deletar ou criar um
+    experimento.
     """
+
     def __init__(self, master: tk.Tk):
         super().__init__(master)
         self.master = master
@@ -42,19 +57,29 @@ class CetusPCR(tk.Frame):
                        highlightcolor=std.bd,
                        highlightbackground=std.bd,
                        highlightthickness=std.bd_width)
+        self.widgets = self._widgets
+
+        self.hover_box = tk.Label(master=self,
+                                  text=std.hover_text,
+                                  bg='white',
+                                  font=('Arial', 11, 'italic'),
+                                  anchor='w')
+        self.hover_box.pack(side='bottom',
+                            fill='x')
 
     def _widgets(self):
         """Cria os widgets da janela.
 
-        A razão para qual os widgets são colocador em outro método é que essa
-        classe será futuramente herdada pela janela ExperimentPCR e não é
-        suposta para copiar todos os widgets para outra janela, apenas as
-        opções de quadro.
+        A razão para qual os widgets são colocador em outro método é
+        que essa classe será futuramente herdada pela janela
+        ExperimentPCR e não é suposta para copiar todos os widgets para
+        outra janela, apenas as opções de quadro.
         """
+
         # Criar os widgets
         self.options_frame = tk.Frame(master=self,
-                                      width=250,
-                                      height=200,
+                                      width=210,
+                                      height=210,
                                       bg=std.bg,
                                       bd=0,
                                       relief=std.relief,
@@ -121,11 +146,12 @@ class CetusPCR(tk.Frame):
         self.experiment_combo.configure(values=functions.experiments)
 
     def handle_openbutton(self):
-        newroot = tk.Tk()
-        new = ExperimentPCR(newroot,
-                            self.experiment_combo.current())
-        new._widgets()
-        self.master.destroy()
+        index = self.experiment_combo.current()
+        if index >= 0:
+            newroot = tk.Tk()
+            new = ExperimentPCR(newroot, index)
+            new.widgets()
+            self.master.destroy()
 
     def handle_newbutton(self):
         new_experiment = functions.Experiment()
@@ -141,7 +167,7 @@ class CetusPCR(tk.Frame):
             newroot = tk.Tk()
             new = ExperimentPCR(newroot,
                                 functions.experiments.index(new_experiment))
-            new._widgets()
+            new.widgets()
             self.master.destroy()
         elif name is None:
             messagebox.showerror('Novo Experimento', 'O nome não pode estar'
@@ -166,27 +192,38 @@ class ExperimentPCR(CetusPCR):
     """Lida com o experimento dado pela janela CetusPCR.
 
     Essa janela é composto por alguns widgets da classe tk.Entry.
-    Seu estado é definido pelas instruções dadas pelo usuário
-    na janela anterior.
+    Seu estado é definido pelas instruções dadas pelo usuário na janela
+    anterior.
 
-    Abrir -> Widgets de entrada são desabilitados com as opções do experimento
-    dentro deles.
+    Abrir -> Widgets de entrada são desabilitados com as opções do
+    experimento dentro deles.
     Novo -> Widgets de entrada são habilitados e esvaziados.
 
-    Se o usuário escolher a opção Abrir, ainda é possível
-    ativar os widgets de entrada pressionando o botão Editar.
+    Se o usuário escolher a opção Abrir, ainda é possível ativar os
+    widgets de entrada pressionando o botão Editar.
 
-    Herdar do CetusPCR cria automaticamente uma janela
-    com as mesmas configurações de quadro.
-    Isso é util pois a janela deve ter a mesma aparência, título, ícone e
-    tamanho, porém, com widgets e opções diferentes.
+    Herdar do CetusPCR cria automaticamente uma janela com as mesmas
+    configurações de quadro.
+    Isso é util pois a janela deve ter a mesma aparência, título, ícone
+    e tamanho, porém, com widgets e opções diferentes.
     """
+
     def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
+        self.exp_index = exp_index
         self.experiment = functions.experiments[exp_index]
         self.vcmd = self.master.register(functions.validate_entry)
+        cetus_device.experiment = self.experiment
 
     def _widgets(self):
+        self.title = tk.Label(master=self,
+                              font=(std.font_title, 40, 'bold'),
+                              fg=std.bd,
+                              bg=std.bg,
+                              text=self.experiment.name)
+        self.title.place(rely=0,
+                         relx=0.1)
+
         self.entry_of_options = {}
         self.gapy = 20
         for stage in ('Desnaturação', 'Anelamento', 'Extensão'):
@@ -201,7 +238,7 @@ class ExperimentPCR(CetusPCR):
                                  validate='key',
                                  validatecommand=(self.vcmd, '%P')
                                  )
-                key = stage + ' ' + option
+                key = f'{stage} {option}'
                 self.entry_of_options[key] = entry
                 entry.place(relx=0.2,
                             rely=0.2,
@@ -225,11 +262,10 @@ class ExperimentPCR(CetusPCR):
             self.gapy += 120
             label = tk.Label(master=self,
                              font=(std.font_title, 20, 'bold'),
-                             text=stage+':',
+                             text=stage + ':',
                              bg=std.bg,
                              fg=std.label_color)
-            # self.entry_of_options['Label-'+stage] = label
-            label.place(in_=self.entry_of_options[stage + ' Temperatura'],
+            label.place(in_=self.entry_of_options[f'{stage} Temperatura'],
                         anchor='sw',
                         y=-10,
                         bordermode='outside')
@@ -244,7 +280,7 @@ class ExperimentPCR(CetusPCR):
                              highlightcolor=std.bd,
                              highlightthickness=std.bd_width,
                              validate='key',
-                             validatecommand=(self.vcmd, '%s', '%P'))
+                             validatecommand=(self.vcmd, '%P'))
             entry.place(relx=0.7,
                         rely=0.2,
                         y=self.gapy)
@@ -253,7 +289,7 @@ class ExperimentPCR(CetusPCR):
 
             label = tk.Label(master=self,
                              font=(std.font_title, 20, 'bold'),
-                             text=option+':',
+                             text=option + ':',
                              fg=std.label_color,
                              bg=std.bg)
             label.place(in_=entry,
@@ -268,13 +304,12 @@ class ExperimentPCR(CetusPCR):
                                       bg=std.bg,
                                       fg=std.label_color)
                 unit_label.place(in_=entry,
-                                 # anchor='ne',
                                  relx=1,
                                  rely=0,
                                  x=10)
 
         self.buttons_frame = tk.Frame(master=self,
-                                      width=250,
+                                      width=230,
                                       height=100,
                                       bg=std.bg,
                                       bd=0,
@@ -305,10 +340,12 @@ class ExperimentPCR(CetusPCR):
             self.buttons[but] = tk.Button(master=self.buttons_frame,
                                           text=but,
                                           width=7,
-                                          font=(std.font_buttons, 15, 'bold'))
+                                          relief=std.relief,
+                                          font=(std.font_buttons, 13, 'bold'))
             self.buttons[but].pack(side='left',
                                    padx=15)
         self.buttons['Salvar'].configure(command=self.handle_save_button)
+        self.buttons['Executar'].configure(command=self.handle_run_button)
 
         self.button_back = tk.Button(master=self,
                                      text='◄',
@@ -316,7 +353,8 @@ class ExperimentPCR(CetusPCR):
                                      bg=std.bg,
                                      bd=0,
                                      fg=std.label_color,
-                                     command=self.handle_back_button)
+                                     command=self.handle_back_button,
+                                     activebackground='#555A5C')
         self.button_back.bind('<Enter>', self.on_hover)
         self.button_back.bind('<Leave>', self.on_leave)
         self.button_back.place(x=0, y=0)
@@ -370,5 +408,46 @@ class ExperimentPCR(CetusPCR):
     def handle_back_button(self):
         newroot = tk.Tk()
         new = CetusPCR(newroot)
-        new._widgets()
+        new.widgets()
         self.close_window()
+
+    def handle_run_button(self):
+        if cetus_device.is_connected:
+            cetus_device.run_experiment()
+            new_root = tk.Tk()
+            new_window = MonitorPCR(new_root, self.exp_index)
+            new_window.widgets()
+            self.close_window()
+        else:
+            messagebox.showerror('Executar Experimento',
+                                 'Dispositivo Cetus PCR não conectado!',
+                                 parent=self)
+
+
+class MonitorPCR(CetusPCR):
+    def __init__(self, master: tk.Tk, exp_index):
+        super().__init__(master)
+        self.experiment = functions.experiments[exp_index]
+
+    def _widgets(self):
+        self.title = tk.Label(master=self,
+                              text=self.experiment.name,
+                              fg=std.bd,
+                              bg=std.bg,
+                              font=(std.font_title, 35, 'bold'))
+        self.title.pack()
+
+        self.info_label = tk.Label(master=self,
+                                   text=cetus_device.reading,
+                                   fg='white',
+                                   bg=std.bg,
+                                   font=(std.font_title, 25, 'bold'))
+        self.info_label.pack()
+        self.update_text()
+
+    def update_text(self):
+        self.info_label.configure(text=f'Value: {cetus_device.reading}')
+        self.after(1, self.update_text)
+
+
+initialize_pcr()
