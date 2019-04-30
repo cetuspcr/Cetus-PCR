@@ -1,5 +1,5 @@
 # Cetus PCR
-<img src="https://github.com/LukaxFeh/CetusPCR/blob/master/assets/logo.png" width="200" height="200">
+<img src="https://github.com/WilsonCazarre/ProjetoCetus/blob/master/assets/logo.png" width="200" height="200">
 
 _Esse projeto se encontra nos seus estados mais iniciais de desenvolvimento._
 
