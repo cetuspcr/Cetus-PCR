@@ -9,6 +9,11 @@ import constants as std
 experiments = []
 
 
+def buttonfunction(func):
+    def wrapper(func):
+        pass
+
+
 class Experiment:
     """Constrói um objeto Experiment, o qual contêm todas as informações
     temperatura e tempo dos processos.
@@ -118,14 +123,16 @@ class ArduinoPCR:
         try:
             self.port_pcr = serial.Serial(port, baudrate, timeout=timeout)
             self.is_connected = True
+            std.hover_text = 'Cetus PCR Conectado.'
             print('Connection Successfully. Initializing Serial Monitor (SM)')
         except serial.SerialException:
             self.port_pcr = None
             self.is_connected = False
+            std.hover_text = 'Cetus PCR desconectado.'
             print('Connection Failed')
 
     def run_experiment(self):
-        message = '<running: ' + self.experiment.name + '>'
+        message: str = f'<running: {self.experiment.name}>'
         self.port_pcr.write(b'%a' % message)
 
 
@@ -136,15 +143,15 @@ class SerialMonitor:
             self.thread = thread.start_new_thread(self.start_monitor, ())
 
     def start_monitor(self):
-        while 1:
+        while self.device.is_connected:
             # if self.device.port_pcr.in_waiting:
-                try:
-                    self.device.reading = self.device.port_pcr.readline()
-                    print(f'(SM) {self.device.reading}')
-                except serial.SerialException:
-                    messagebox.showerror('Dispositivo desconectado',
-                                         'Ocorreu um erro ao se comunicar com '
-                                         'o CetusPCR. Verifique a conexão e '
-                                         'reinicie o aplicativo.')
-                    self.device.is_connected = False
-                    break
+            try:
+                self.device.reading = self.device.port_pcr.readline()
+                print(f'(SM) {self.device.reading}')
+            except serial.SerialException:
+                messagebox.showerror('Dispositivo desconectado',
+                                     'Ocorreu um erro ao se comunicar com '
+                                     'o CetusPCR. Verifique a conexão e '
+                                     'reinicie o aplicativo.')
+                self.device.is_connected = False
+                std.hover_text = 'Cetus PCR desconectado.'

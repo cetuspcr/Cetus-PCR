@@ -57,7 +57,7 @@ class CetusPCR(tk.Frame):
                        highlightcolor=std.bd,
                        highlightbackground=std.bd,
                        highlightthickness=std.bd_width)
-        self.widgets = self._widgets
+        self.create_widgets = self._widgets
 
         self.hover_box = tk.Label(master=self,
                                   text=std.hover_text,
@@ -150,7 +150,7 @@ class CetusPCR(tk.Frame):
         if index >= 0:
             newroot = tk.Tk()
             new = ExperimentPCR(newroot, index)
-            new.widgets()
+            new.create_widgets()
             self.master.destroy()
 
     def handle_newbutton(self):
@@ -167,7 +167,7 @@ class CetusPCR(tk.Frame):
             newroot = tk.Tk()
             new = ExperimentPCR(newroot,
                                 functions.experiments.index(new_experiment))
-            new.widgets()
+            new.create_widgets()
             self.master.destroy()
         elif name is None:
             messagebox.showerror('Novo Experimento', 'O nome não pode estar'
@@ -408,7 +408,7 @@ class ExperimentPCR(CetusPCR):
     def handle_back_button(self):
         newroot = tk.Tk()
         new = CetusPCR(newroot)
-        new.widgets()
+        new.create_widgets()
         self.close_window()
 
     def handle_run_button(self):
@@ -416,7 +416,7 @@ class ExperimentPCR(CetusPCR):
             cetus_device.run_experiment()
             new_root = tk.Tk()
             new_window = MonitorPCR(new_root, self.exp_index)
-            new_window.widgets()
+            new_window.create_widgets()
             self.close_window()
         else:
             messagebox.showerror('Executar Experimento',
