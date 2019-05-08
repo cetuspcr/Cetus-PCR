@@ -9,11 +9,6 @@ import constants as std
 experiments = []
 
 
-def buttonfunction(func):
-    def wrapper(func):
-        pass
-
-
 class Experiment:
     """Constrói um objeto Experiment, o qual contêm todas as informações
     temperatura e tempo dos processos.
