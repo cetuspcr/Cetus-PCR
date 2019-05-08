@@ -403,7 +403,7 @@ class ExperimentPCR(CetusPCR):
         self.experiment.final_temp = \
             self.entry_of_options['Temperatura Final'].get()
         functions.dump_pickle(std.exp_path, functions.experiments)
-        messagebox.showinfo('Cetus PCR', 'Experimento salvo!', parent=self)
+        messagebox.showinfo('Cetus PCR', 'Experimento salvo :]', parent=self)
 
     def handle_back_button(self):
         newroot = tk.Tk()
