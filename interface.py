@@ -159,7 +159,8 @@ class CetusPCR(tk.Frame):
                                                         ' experimento:',
                                     parent=self.master)
         new_experiment.name = name
-        if new_experiment.name is not None:
+        print(name)
+        if new_experiment.name != '' and new_experiment.name is not None:
             functions.experiments.append(new_experiment)
             functions.dump_pickle(std.exp_path, functions.experiments)
             self.experiment_combo.configure(values=functions.experiments)
@@ -169,9 +170,11 @@ class CetusPCR(tk.Frame):
                                 functions.experiments.index(new_experiment))
             new.create_widgets()
             self.master.destroy()
-        elif name is None:
+        elif name is '':
             messagebox.showerror('Novo Experimento', 'O nome não pode estar'
                                                      ' vazio')
+        elif name is None:
+            print('hey')
 
     def handle_deletebutton(self):
         delete = messagebox.askyesnocancel('Deletar experimento',
@@ -217,7 +220,7 @@ class ExperimentPCR(CetusPCR):
 
     def _widgets(self):
         self.title = tk.Label(master=self,
-                              font=(std.font_title, 40, 'bold'),
+                              font=('Comic Sans MS', 40, 'bold'),
                               fg=std.bd,
                               bg=std.bg,
                               text=self.experiment.name)
@@ -425,6 +428,7 @@ class ExperimentPCR(CetusPCR):
 
 
 class MonitorPCR(CetusPCR):
+
     def __init__(self, master: tk.Tk, exp_index):
         super().__init__(master)
         self.experiment = functions.experiments[exp_index]
