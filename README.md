@@ -1,5 +1,5 @@
 # Cetus PCR
-<img src="https://github.com/CetusPCR/cetuspcr.github.io/blob/master/images/cetus.png?raw=true" alt="logo do projeto Cetus - o simbolo de sua constelação" width="800" height="500">
+<img src="https://github.com/CetusPCR/cetuspcr.github.io/blob/master/images/cetus.png?raw=true" alt="logo do projeto Cetus - o simbolo de sua constelação" width="800" height="450">
 
 _Esse projeto se encontra nos seus estados mais iniciais de desenvolvimento._
 
