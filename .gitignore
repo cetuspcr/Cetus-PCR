@@ -1,0 +1,9 @@
+experiments.pcr
+cetus.ico
+venv/
+.vscode/
+__pycache__/
+
+*.dll
+*.xml
+*.iml
