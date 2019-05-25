@@ -114,16 +114,17 @@ class ArduinoPCR:
                  experiment: Experiment = None):
         self.experiment = experiment
         self.reading = ''
+        self.port = port
 
         try:
             self.port_pcr = serial.Serial(port, baudrate, timeout=timeout)
             self.is_connected = True
-            std.hover_text = 'Cetus PCR Conectado.'
+
             print('Connection Successfully. Initializing Serial Monitor (SM)')
         except serial.SerialException:
             self.port_pcr = None
             self.is_connected = False
-            std.hover_text = 'Cetus PCR desconectado.'
+
             print('Connection Failed')
 
     def run_experiment(self):

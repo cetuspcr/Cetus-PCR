@@ -13,7 +13,7 @@ label_color = 'white'
 font_title = 'Courier New'
 font_buttons = 'Arial'
 
-icon = 'cetus.ico'
+icon = 'assets/cetus.ico'
 
 hover_text = 'Feito com ♥ pelo 3º Mecatrônica (2k19).'
 

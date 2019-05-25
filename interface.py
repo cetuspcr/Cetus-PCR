@@ -32,6 +32,35 @@ def initialize_pcr():
     functions.SerialMonitor(cetus_device)
 
 
+class BaseWindow(tk.Tk):
+    def __init__(self):
+        tk.Tk.__init__(self)
+        self._frame = None
+        self.index_exp = None
+        self.switch_frame(CetusPCR)
+        self.check_if_is_connected()
+
+    def switch_frame(self, new_frame):
+        if self.index_exp is not None:
+            new_frame = new_frame(self, self.index_exp)
+        else:
+            new_frame = new_frame(self)
+        if self._frame is not None:
+            self._frame.destroy()
+        self._frame = new_frame
+        self._frame.pack()
+        self._frame.create_widgets()
+
+    def check_if_is_connected(self):
+        if self._frame is not None:
+            if cetus_device.is_connected:
+                new_text = f'Cetus PCR Conectado ({cetus_device.port}).'
+            else:
+                new_text = f'Cetus PCR Desconectado.'
+            self._frame.hover_box.configure(text=new_text)
+        self.after(1, self.check_if_is_connected)
+
+
 class CetusPCR(tk.Frame):
     """Primeira janela do aplicativo.
 
@@ -39,7 +68,7 @@ class CetusPCR(tk.Frame):
     experimento.
     """
 
-    def __init__(self, master: tk.Tk):
+    def __init__(self, master: BaseWindow):
         super().__init__(master)
         self.master = master
         self.master.geometry('+200+10')
@@ -130,6 +159,15 @@ class CetusPCR(tk.Frame):
                                      relx=0.05,
                                      y=-10)
 
+        self.button_reconnect = tk.Button(master=self.options_frame,
+                                          font=(std.font_buttons, 13, 'bold'),
+                                          text='Reconectar',
+                                          relief=std.relief,
+                                          width=8,
+                                          height=0,
+                                          command=self.handle_reconnectbutton)
+        self.button_reconnect.pack(side='bottom')
+
         self.experiment_combo.place(relx=0.35,
                                     rely=0.47,
                                     anchor='center')
@@ -148,10 +186,8 @@ class CetusPCR(tk.Frame):
     def handle_openbutton(self):
         index = self.experiment_combo.current()
         if index >= 0:
-            newroot = tk.Tk()
-            new = ExperimentPCR(newroot, index)
-            new.create_widgets()
-            self.master.destroy()
+            self.master.index_exp = index
+            self.master.switch_frame(ExperimentPCR)
 
     def handle_newbutton(self):
         new_experiment = functions.Experiment()
@@ -159,22 +195,18 @@ class CetusPCR(tk.Frame):
                                                         ' experimento:',
                                     parent=self.master)
         new_experiment.name = name
-        print(name)
+
         if new_experiment.name != '' and new_experiment.name is not None:
             functions.experiments.append(new_experiment)
             functions.dump_pickle(std.exp_path, functions.experiments)
             self.experiment_combo.configure(values=functions.experiments)
 
-            newroot = tk.Tk()
-            new = ExperimentPCR(newroot,
-                                functions.experiments.index(new_experiment))
-            new.create_widgets()
-            self.master.destroy()
+            self.master.index_exp = functions.experiments.index(new_experiment)
+            self.master.switch_frame(ExperimentPCR)
+
         elif name is '':
             messagebox.showerror('Novo Experimento', 'O nome não pode estar'
                                                      ' vazio')
-        elif name is None:
-            print('hey')
 
     def handle_deletebutton(self):
         delete = messagebox.askyesnocancel('Deletar experimento',
@@ -185,6 +217,20 @@ class CetusPCR(tk.Frame):
             print(functions.experiments)
             self.experiment_combo.configure(values=functions.experiments)
             self.experiment_combo.delete(0, 'end')
+
+    @staticmethod
+    def handle_reconnectbutton():
+        if not cetus_device.is_connected:
+            initialize_pcr()
+            if cetus_device.is_connected:
+                messagebox.showinfo('Cetus PCR',
+                                    'Dispositivo conectado com sucesso.')
+            else:
+                messagebox.showerror('Cetus PCR',
+                                     'Conexão mal-sucedida.')
+        else:
+            messagebox.showinfo('Cetus PCR',
+                                'O Dispositivo já está conectado.')
 
     def close_window(self):
         functions.dump_pickle(std.exp_path, functions.experiments)
@@ -211,7 +257,7 @@ class ExperimentPCR(CetusPCR):
     e tamanho, porém, com widgets e opções diferentes.
     """
 
-    def __init__(self, master: tk.Tk, exp_index):
+    def __init__(self, master: BaseWindow, exp_index):
         super().__init__(master)
         self.exp_index = exp_index
         self.experiment = functions.experiments[exp_index]
@@ -409,18 +455,14 @@ class ExperimentPCR(CetusPCR):
         messagebox.showinfo('Cetus PCR', 'Experimento salvo :]', parent=self)
 
     def handle_back_button(self):
-        newroot = tk.Tk()
-        new = CetusPCR(newroot)
-        new.create_widgets()
-        self.close_window()
+        self.master.index_exp = None
+        self.master.switch_frame(CetusPCR)
 
     def handle_run_button(self):
         if cetus_device.is_connected:
             cetus_device.run_experiment()
-            new_root = tk.Tk()
-            new_window = MonitorPCR(new_root, self.exp_index)
-            new_window.create_widgets()
-            self.close_window()
+            self.master.index_exp = self.exp_index
+            self.master.switch_frame(MonitorPCR)
         else:
             messagebox.showerror('Executar Experimento',
                                  'Dispositivo Cetus PCR não conectado!',
@@ -429,8 +471,9 @@ class ExperimentPCR(CetusPCR):
 
 class MonitorPCR(CetusPCR):
 
-    def __init__(self, master: tk.Tk, exp_index):
+    def __init__(self, master: BaseWindow, exp_index):
         super().__init__(master)
+        self.exp_index = exp_index
         self.experiment = functions.experiments[exp_index]
 
     def _widgets(self):
@@ -449,9 +492,31 @@ class MonitorPCR(CetusPCR):
         self.info_label.pack()
         self.update_text()
 
+        self.button_back = tk.Button(master=self,
+                                     text='◄',
+                                     font=(std.font_title, 20, 'bold'),
+                                     bg=std.bg,
+                                     bd=0,
+                                     fg=std.label_color,
+                                     command=self.handle_back_button,
+                                     activebackground='#555A5C')
+        self.button_back.bind('<Enter>', self.on_hover)
+        self.button_back.bind('<Leave>', self.on_leave)
+        self.button_back.place(x=0, y=0)
+
+    def on_hover(self, event=None):
+        self.button_back['bg'] = std.bd
+
+    def on_leave(self, event=None):
+        self.button_back['bg'] = std.bg
+
     def update_text(self):
         self.info_label.configure(text=f'Value: {cetus_device.reading}')
         self.after(1, self.update_text)
+
+    def handle_back_button(self):
+        self.master.index_exp = self.exp_index
+        self.master.switch_frame(ExperimentPCR)
 
 
 initialize_pcr()
