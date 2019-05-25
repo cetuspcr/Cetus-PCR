@@ -93,6 +93,7 @@ class CetusPCR(tk.Frame):
                                   bg='white',
                                   font=('Arial', 11, 'italic'),
                                   anchor='w')
+
         self.hover_box.pack(side='bottom',
                             fill='x')
 
@@ -108,7 +109,7 @@ class CetusPCR(tk.Frame):
         # Criar os widgets
         self.options_frame = tk.Frame(master=self,
                                       width=210,
-                                      height=210,
+                                      height=260,
                                       bg=std.bg,
                                       bd=0,
                                       relief=std.relief,
@@ -124,7 +125,7 @@ class CetusPCR(tk.Frame):
                                           width=7)
         self.buttons = {}
         # Criar e posicionar 3 botões dentro do "options_frame"
-        for but in ('Abrir', 'Novo', 'Excluir'):
+        for but in ('Abrir', 'Novo', 'Excluir', 'Reconectar'):
             self.buttons[but] = tk.Button(master=self.options_frame,
                                           font=(std.font_buttons, 13, 'bold'),
                                           text=but,
@@ -135,6 +136,7 @@ class CetusPCR(tk.Frame):
         self.buttons['Abrir'].configure(command=self.handle_openbutton)
         self.buttons['Novo'].configure(command=self.handle_newbutton)
         self.buttons['Excluir'].configure(command=self.handle_deletebutton)
+        self.buttons['Reconectar'].configure(command=self.handle_reconnectbutton)
 
         self.experiment_combo = ttk.Combobox(master=self,
                                              width=30,
@@ -158,15 +160,6 @@ class CetusPCR(tk.Frame):
                                      bordermode='outside',
                                      relx=0.05,
                                      y=-10)
-
-        self.button_reconnect = tk.Button(master=self.options_frame,
-                                          font=(std.font_buttons, 13, 'bold'),
-                                          text='Reconectar',
-                                          relief=std.relief,
-                                          width=8,
-                                          height=0,
-                                          command=self.handle_reconnectbutton)
-        self.button_reconnect.pack(side='bottom')
 
         self.experiment_combo.place(relx=0.35,
                                     rely=0.47,
