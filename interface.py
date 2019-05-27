@@ -16,7 +16,6 @@ dentro da janela.
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-
 # import matplotlib.pyplot as plt
 # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -26,10 +25,8 @@ import functions
 
 def initialize_pcr():
     global cetus_device
-    cetus_device = functions.ArduinoPCR(port='COM3',
-                                        baudrate=9600,
+    cetus_device = functions.ArduinoPCR(baudrate=9600,
                                         timeout=1)
-    functions.SerialMonitor(cetus_device)
 
 
 class BaseWindow(tk.Tk):
@@ -54,7 +51,8 @@ class BaseWindow(tk.Tk):
     def check_if_is_connected(self):
         if self._frame is not None:
             if cetus_device.is_connected:
-                new_text = f'Cetus PCR Conectado ({cetus_device.port}).'
+                new_text = f'Cetus PCR Conectado ' \
+                    f'({cetus_device.port_connected}).'
             else:
                 new_text = f'Cetus PCR Desconectado.'
             self._frame.hover_box.configure(text=new_text)
@@ -73,7 +71,7 @@ class CetusPCR(tk.Frame):
         self.master = master
         self.master.geometry('+200+10')
         self.master.title('Cetus PCR')
-        self.master.iconbitmap(std.icon)
+        self.master.iconbitmap(std.window_icon)
         self.master.protocol('WM_DELETE_WINDOW', self.close_window)
         self.pack()
         self.pack_propagate(False)
@@ -88,6 +86,9 @@ class CetusPCR(tk.Frame):
                        highlightthickness=std.bd_width)
         self.create_widgets = self._widgets
 
+        self.gear_icon = tk.PhotoImage(file='assets/gear-icon-29.png') \
+            .subsample(40)
+
         self.hover_box = tk.Label(master=self,
                                   text=std.hover_text,
                                   bg='white',
@@ -96,6 +97,20 @@ class CetusPCR(tk.Frame):
 
         self.hover_box.pack(side='bottom',
                             fill='x')
+
+        self.side_bar_frame = tk.Frame(master=self,
+                                       width=51,
+                                       bg='gray38')
+        self.side_bar_frame.pack(side='left', fill='y')
+
+        self.config_button = tk.Button(master=self.side_bar_frame,
+                                       image=self.gear_icon,
+                                       width=51, height=51,
+                                       activebackground='gray67',
+                                       bg='gray38',
+                                       relief='flat',
+                                       highlightthickness=0)
+        self.config_button.pack(side='bottom')
 
     def _widgets(self):
         """Cria os widgets da janela.
@@ -136,7 +151,8 @@ class CetusPCR(tk.Frame):
         self.buttons['Abrir'].configure(command=self.handle_openbutton)
         self.buttons['Novo'].configure(command=self.handle_newbutton)
         self.buttons['Excluir'].configure(command=self.handle_deletebutton)
-        self.buttons['Reconectar'].configure(command=self.handle_reconnectbutton)
+        self.buttons['Reconectar'].configure(command=
+                                             self.handle_reconnectbutton)
 
         self.experiment_combo = ttk.Combobox(master=self,
                                              width=30,
@@ -256,6 +272,18 @@ class ExperimentPCR(CetusPCR):
         self.experiment = functions.experiments[exp_index]
         self.vcmd = self.master.register(functions.validate_entry)
         cetus_device.experiment = self.experiment
+
+        self.button_back = tk.Button(master=self,
+                                     text='◄',
+                                     font=(std.font_title, 27, 'bold'),
+                                     bg=std.bg,
+                                     bd=0,
+                                     fg=std.label_color,
+                                     command=self.handle_back_button,
+                                     activebackground='#555A5C')
+        self.button_back.bind('<Enter>', self.on_hover)
+        self.button_back.bind('<Leave>', self.on_leave)
+        self.button_back.place(x=0, y=0)
 
     def _widgets(self):
         self.title = tk.Label(master=self,
@@ -389,18 +417,6 @@ class ExperimentPCR(CetusPCR):
         self.buttons['Salvar'].configure(command=self.handle_save_button)
         self.buttons['Executar'].configure(command=self.handle_run_button)
 
-        self.button_back = tk.Button(master=self,
-                                     text='◄',
-                                     font=(std.font_title, 20, 'bold'),
-                                     bg=std.bg,
-                                     bd=0,
-                                     fg=std.label_color,
-                                     command=self.handle_back_button,
-                                     activebackground='#555A5C')
-        self.button_back.bind('<Enter>', self.on_hover)
-        self.button_back.bind('<Leave>', self.on_leave)
-        self.button_back.place(x=0, y=0)
-
         self.open_experiment()
 
     def open_experiment(self):
@@ -462,12 +478,10 @@ class ExperimentPCR(CetusPCR):
                                  parent=self)
 
 
-class MonitorPCR(CetusPCR):
+class MonitorPCR(ExperimentPCR):
 
     def __init__(self, master: BaseWindow, exp_index):
-        super().__init__(master)
-        self.exp_index = exp_index
-        self.experiment = functions.experiments[exp_index]
+        super().__init__(master, exp_index)
 
     def _widgets(self):
         self.title = tk.Label(master=self,
@@ -484,24 +498,6 @@ class MonitorPCR(CetusPCR):
                                    font=(std.font_title, 25, 'bold'))
         self.info_label.pack()
         self.update_text()
-
-        self.button_back = tk.Button(master=self,
-                                     text='◄',
-                                     font=(std.font_title, 20, 'bold'),
-                                     bg=std.bg,
-                                     bd=0,
-                                     fg=std.label_color,
-                                     command=self.handle_back_button,
-                                     activebackground='#555A5C')
-        self.button_back.bind('<Enter>', self.on_hover)
-        self.button_back.bind('<Leave>', self.on_leave)
-        self.button_back.place(x=0, y=0)
-
-    def on_hover(self, event=None):
-        self.button_back['bg'] = std.bd
-
-    def on_leave(self, event=None):
-        self.button_back['bg'] = std.bg
 
     def update_text(self):
         self.info_label.configure(text=f'Value: {cetus_device.reading}')

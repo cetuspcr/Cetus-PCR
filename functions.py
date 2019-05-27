@@ -3,6 +3,7 @@ import _thread as thread
 from tkinter import simpledialog, messagebox
 
 import serial
+from serial.tools import list_ports
 
 import constants as std
 
@@ -39,7 +40,7 @@ class StringDialog(simpledialog._QueryString):
     # Créditos ao TeamSpen210 do Reddit
     def body(self, master):
         super().body(master)
-        self.iconbitmap(std.icon)
+        self.iconbitmap(std.window_icon)
 
 
 def ask_string(title, prompt, **kwargs):
@@ -110,44 +111,52 @@ def validate_entry(new_text):
 
 
 class ArduinoPCR:
-    def __init__(self, port, baudrate, timeout,
+    def __init__(self, baudrate, timeout,
                  experiment: Experiment = None):
         self.experiment = experiment
         self.reading = ''
-        self.port = port
+        # Conferir com o nome no Gerenciador de dispositivos do windows
+        self.device_type = 'Arduino Uno'
 
         try:
-            self.port_pcr = serial.Serial(port, baudrate, timeout=timeout)
-            self.is_connected = True
+            ports = list_ports.comports()
+            if not list_ports.comports():
+                raise serial.SerialException
+            for port in ports:
+                if self.device_type in port.description:
+                    self.port_pcr = serial.Serial(port.device, baudrate,
+                                                  timeout=timeout)
+                    self.is_connected = True
+                    self.port_connected = port.device
 
-            print('Connection Successfully. Initializing Serial Monitor (SM)')
+                    print('Connection Successfully. '
+                          'Initializing Serial Monitor (SM)')
+                    break
+                else:
+                    raise serial.SerialException
         except serial.SerialException:
             self.port_pcr = None
             self.is_connected = False
 
             print('Connection Failed')
 
+        if self.is_connected:
+            self.thread = thread.start_new_thread(self.start_monitor, ())
+
     def run_experiment(self):
         message: str = f'<running: {self.experiment.name}>'
         self.port_pcr.write(b'%a' % message)
 
-
-class SerialMonitor:
-    def __init__(self, device: ArduinoPCR):
-        self.device = device
-        if self.device.is_connected:
-            self.thread = thread.start_new_thread(self.start_monitor, ())
-
     def start_monitor(self):
-        while self.device.is_connected:
+        while self.is_connected:
             # if self.device.port_pcr.in_waiting:
             try:
-                self.device.reading = self.device.port_pcr.readline()
-                print(f'(SM) {self.device.reading}')
+                self.reading = self.port_pcr.readline()
+                print(f'(SM) {self.reading}')
             except serial.SerialException:
                 messagebox.showerror('Dispositivo desconectado',
                                      'Ocorreu um erro ao se comunicar com '
                                      'o CetusPCR. Verifique a conexão e '
                                      'reinicie o aplicativo.')
-                self.device.is_connected = False
+                self.is_connected = False
                 std.hover_text = 'Cetus PCR desconectado.'
