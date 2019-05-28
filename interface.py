@@ -23,21 +23,47 @@ import constants as std
 import functions
 
 
-def initialize_pcr():
-    global cetus_device
-    cetus_device = functions.ArduinoPCR(baudrate=9600,
-                                        timeout=1)
+class MyButton(tk.Button):
+    """Botão modificado para alternar entre 2 ícones.
+
+    O caminho dos ícones é fornecido ao método __init__, após isso os 2
+    objetos de imagens são criados e o tk.Button gera o objeto de botão
+    do Tkinter.
+
+    Por fim, on_hover e on_leave são anexadas ao botão.
+    """
+
+    def __init__(self, master, image1, image2, **kw):
+        self.icon1 = tk.PhotoImage(file=image1)
+        self.icon2 = tk.PhotoImage(file=image2)
+        super().__init__(master=master, image=self.icon1, **kw)
+        self.bind('<Enter>', self.on_hover)
+        self.bind('<Leave>', self.on_leave)
+
+    def on_hover(self, event):
+        """Altera o ícone do botão quando o cursor entra em sua área."""
+        self.configure(image=self.icon2)
+
+    def on_leave(self, event):
+        """Altera o ícone do botão quando o cursor saí da sua área."""
+        self.configure(image=self.icon1)
+
+
+cetus_device = functions.ArduinoPCR(baudrate=9600, timeout=1)
 
 
 class BaseWindow(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
         self._frame = None
+        self.frame_name = None
         self.index_exp = None
         self.switch_frame(CetusPCR)
+        self.connected_icon = tk.PhotoImage(file='assets/connected_icon.png')
         self.check_if_is_connected()
 
     def switch_frame(self, new_frame):
+        self.frame_name = str(new_frame)
         if self.index_exp is not None:
             new_frame = new_frame(self, self.index_exp)
         else:
@@ -49,13 +75,25 @@ class BaseWindow(tk.Tk):
         self._frame.create_widgets()
 
     def check_if_is_connected(self):
+        """Função para verificar alterações na porta serial.
+
+        Essa função roda em looping infinito no background da janela
+        principal.
+        """
         if self._frame is not None:
             if cetus_device.is_connected:
+                self._frame.side_buttons['reconnect_icon']. \
+                    configure(image=self.connected_icon)
                 new_text = f'Cetus PCR Conectado ' \
                     f'({cetus_device.port_connected}).'
             else:
                 new_text = f'Cetus PCR Desconectado.'
             self._frame.hover_box.configure(text=new_text)
+        if cetus_device.waiting_update:
+            self._frame.side_buttons['reconnect_icon']. \
+                configure(
+                image=self._frame.side_buttons['reconnect_icon'].icon1)
+            cetus_device.waiting_update = False
         self.after(1, self.check_if_is_connected)
 
 
@@ -79,15 +117,9 @@ class CetusPCR(tk.Frame):
         self.configure(width=1000,
                        height=660,
                        bg=std.bg,
-                       bd=0,
-                       relief=std.relief,
-                       highlightcolor=std.bd,
-                       highlightbackground=std.bd,
-                       highlightthickness=std.bd_width)
-        self.create_widgets = self._widgets
+                       bd=0)
 
-        self.gear_icon = tk.PhotoImage(file='assets/gear-icon-29.png') \
-            .subsample(40)
+        self.create_widgets = self._widgets
 
         self.hover_box = tk.Label(master=self,
                                   text=std.hover_text,
@@ -99,18 +131,49 @@ class CetusPCR(tk.Frame):
                             fill='x')
 
         self.side_bar_frame = tk.Frame(master=self,
-                                       width=51,
-                                       bg='gray38')
+                                       bg=std.side_bar_color)
         self.side_bar_frame.pack(side='left', fill='y')
+        self.side_bar_width = 55
 
-        self.config_button = tk.Button(master=self.side_bar_frame,
-                                       image=self.gear_icon,
-                                       width=51, height=51,
-                                       activebackground='gray67',
-                                       bg='gray38',
-                                       relief='flat',
-                                       highlightthickness=0)
-        self.config_button.pack(side='bottom')
+        self.top_bar_frame = tk.Frame(master=self,
+                                      height=65,
+                                      bg=std.top_bar_color)
+        self.top_bar_frame.pack(side='top', fill='x')
+        self.top_bar_frame.pack_propagate(False)
+
+        self.logo = tk.PhotoImage(file=std.logo_image_path).subsample(2)
+
+        self.logo_label = tk.Label(master=self.top_bar_frame,
+                                   bg=std.top_bar_color,
+                                   image=self.logo)
+        self.logo_label.pack(side='right', padx=10)
+
+        self.side_buttons = {}
+        for but in std.side_buttons_path:
+            if '_icon' in but:
+                self.path_slice = but.split('_')
+                self.path1 = std.side_buttons_path[but]
+                self.path2 = std.side_buttons_path[
+                    f'{self.path_slice[0]}_highlight']
+                self.new_button = MyButton(master=self.side_bar_frame,
+                                           image1=self.path1,
+                                           image2=self.path2,
+                                           width=self.side_bar_width + 10,
+                                           activebackground=std.side_bar_color,
+                                           bd=0,
+                                           bg=std.side_bar_color,
+                                           relief='flat',
+                                           highlightthickness=0)
+
+                self.side_buttons[but] = self.new_button
+                if but != 'home_icon':
+                    self.new_button.pack(side='bottom', pady=3)
+                else:
+                    self.new_button.pack(side='top', pady=3)
+        self.side_buttons['home_icon'].configure(command=
+                                                 self.handle_home_button)
+        self.side_buttons['reconnect_icon'].configure(command=
+                                                      self.handle_reconnect_button)
 
     def _widgets(self):
         """Cria os widgets da janela.
@@ -123,8 +186,8 @@ class CetusPCR(tk.Frame):
 
         # Criar os widgets
         self.options_frame = tk.Frame(master=self,
-                                      width=210,
-                                      height=260,
+                                      width=850,
+                                      height=120,
                                       bg=std.bg,
                                       bd=0,
                                       relief=std.relief,
@@ -132,58 +195,55 @@ class CetusPCR(tk.Frame):
                                       highlightbackground=std.bd,
                                       highlightthickness=std.bd_width)
 
-        self.options_box_title = tk.Label(master=self,
-                                          text='Opções',
-                                          font=(std.font_title, 13, 'bold'),
-                                          bg=std.bg,
-                                          fg=std.label_color,
-                                          width=7)
         self.buttons = {}
         # Criar e posicionar 3 botões dentro do "options_frame"
-        for but in ('Abrir', 'Novo', 'Excluir', 'Reconectar'):
-            self.buttons[but] = tk.Button(master=self.options_frame,
-                                          font=(std.font_buttons, 13, 'bold'),
-                                          text=but,
-                                          relief=std.relief,
-                                          width=8,
-                                          height=0)
-            self.buttons[but].pack(pady=14)
-        self.buttons['Abrir'].configure(command=self.handle_openbutton)
-        self.buttons['Novo'].configure(command=self.handle_newbutton)
-        self.buttons['Excluir'].configure(command=self.handle_deletebutton)
-        self.buttons['Reconectar'].configure(command=
-                                             self.handle_reconnectbutton)
+        for but in std.cetuspcr_buttons_path:
+            if '_icon' in but:
+                self.path_slice = but.split('_')
+                self.path1 = std.cetuspcr_buttons_path[but]
+                self.path2 = std.cetuspcr_buttons_path[
+                    f'{self.path_slice[0]}_highlight']
+                self.new_button = MyButton(master=self.options_frame,
+                                           image1=self.path1,
+                                           image2=self.path2,
+                                           activebackground=std.bg,
+                                           width=75,
+                                           bd=0,
+                                           bg=std.bg,
+                                           relief='flat',
+                                           highlightthickness=0)
 
-        self.experiment_combo = ttk.Combobox(master=self,
-                                             width=30,
-                                             font=(std.font_title, 15),
-                                             values=['Experimento 01'])
+                self.buttons[but] = self.new_button
+                self.buttons[but].pack(side='right', padx=8)
+        self.buttons['confirm_icon'].configure(command=self.handle_open_button)
+        self.buttons['add_icon'].configure(command=self.handle_new_button)
+        self.buttons['delete_icon'].configure(
+            command=self.handle_delete_button)
+
+        self.experiment_combo = ttk.Combobox(master=self.options_frame,
+                                             width=35,
+                                             font=(std.font_title, 17))
 
         self.experiment_combo_title = tk.Label(master=self,
-                                               font=(std.font_title, 25,
+                                               font=(std.font_title, 22,
                                                      'bold'),
                                                text='Selecione o experimento:',
                                                fg=std.label_color,
                                                bg=std.bg)
 
         # Posicionar os widgets(botões não incluídos)
-        self.options_frame.place(rely=0.45,
-                                 relx=0.75,
-                                 anchor='center')
+        self.options_frame.place(rely=0.50,
+                                 relx=0.10,
+                                 anchor='w')
         self.options_frame.pack_propagate(False)
 
-        self.options_box_title.place(in_=self.options_frame,
-                                     bordermode='outside',
-                                     relx=0.05,
-                                     y=-10)
-
-        self.experiment_combo.place(relx=0.35,
-                                    rely=0.47,
-                                    anchor='center')
+        self.experiment_combo.place(rely=0.55,
+                                    relx=0.02,
+                                    anchor='w',
+                                    bordermode='inside')
 
         self.experiment_combo_title.place(in_=self.experiment_combo,
-                                          relx=0.5,
-                                          anchor='s',
+                                          anchor='sw',
                                           bordermode='outside')
 
         self.show_experiments()
@@ -192,13 +252,13 @@ class CetusPCR(tk.Frame):
         functions.experiments = functions.open_pickle(std.exp_path)
         self.experiment_combo.configure(values=functions.experiments)
 
-    def handle_openbutton(self):
+    def handle_open_button(self):
         index = self.experiment_combo.current()
         if index >= 0:
             self.master.index_exp = index
             self.master.switch_frame(ExperimentPCR)
 
-    def handle_newbutton(self):
+    def handle_new_button(self):
         new_experiment = functions.Experiment()
         name = functions.ask_string('Novo Experimento', 'Digite o nome do'
                                                         ' experimento:',
@@ -217,29 +277,38 @@ class CetusPCR(tk.Frame):
             messagebox.showerror('Novo Experimento', 'O nome não pode estar'
                                                      ' vazio')
 
-    def handle_deletebutton(self):
+    def handle_delete_button(self):
+        experiment = functions.experiments[self.experiment_combo.current()]
         delete = messagebox.askyesnocancel('Deletar experimento',
-                                           'Você tem certeza?')
+                                           'Você tem certeza que deseja '
+                                           f'excluir "{experiment.name}"?\n'
+                                           'Essa ação não pode ser desfeita.')
         if delete:
-            functions.experiments.pop(self.experiment_combo.current())
+            functions.experiments.remove(experiment)
             functions.dump_pickle(std.exp_path, functions.experiments)
-            print(functions.experiments)
             self.experiment_combo.configure(values=functions.experiments)
             self.experiment_combo.delete(0, 'end')
 
+    def handle_home_button(self):
+        self.master.index_exp = None
+        self.master.switch_frame(CetusPCR)
+
     @staticmethod
-    def handle_reconnectbutton():
+    def handle_reconnect_button():
         if not cetus_device.is_connected:
-            initialize_pcr()
+            cetus_device.initialize_connection()
+            port = cetus_device.port_connected
             if cetus_device.is_connected:
                 messagebox.showinfo('Cetus PCR',
-                                    'Dispositivo conectado com sucesso.')
+                                    'Dispositivo conectado com sucesso.\n'
+                                    f'Porta {port}')
             else:
                 messagebox.showerror('Cetus PCR',
                                      'Conexão mal-sucedida.')
         else:
             messagebox.showinfo('Cetus PCR',
-                                'O Dispositivo já está conectado.')
+                                'O Dispositivo já está conectado '
+                                f'({cetus_device.port_connected}).')
 
     def close_window(self):
         functions.dump_pickle(std.exp_path, functions.experiments)
@@ -250,15 +319,6 @@ class ExperimentPCR(CetusPCR):
     """Lida com o experimento dado pela janela CetusPCR.
 
     Essa janela é composto por alguns widgets da classe tk.Entry.
-    Seu estado é definido pelas instruções dadas pelo usuário na janela
-    anterior.
-
-    Abrir -> Widgets de entrada são desabilitados com as opções do
-    experimento dentro deles.
-    Novo -> Widgets de entrada são habilitados e esvaziados.
-
-    Se o usuário escolher a opção Abrir, ainda é possível ativar os
-    widgets de entrada pressionando o botão Editar.
 
     Herdar do CetusPCR cria automaticamente uma janela com as mesmas
     configurações de quadro.
@@ -273,23 +333,11 @@ class ExperimentPCR(CetusPCR):
         self.vcmd = self.master.register(functions.validate_entry)
         cetus_device.experiment = self.experiment
 
-        self.button_back = tk.Button(master=self,
-                                     text='◄',
-                                     font=(std.font_title, 27, 'bold'),
-                                     bg=std.bg,
-                                     bd=0,
-                                     fg=std.label_color,
-                                     command=self.handle_back_button,
-                                     activebackground='#555A5C')
-        self.button_back.bind('<Enter>', self.on_hover)
-        self.button_back.bind('<Leave>', self.on_leave)
-        self.button_back.place(x=0, y=0)
-
     def _widgets(self):
         self.title = tk.Label(master=self,
-                              font=('Comic Sans MS', 40, 'bold'),
-                              fg=std.bd,
-                              bg=std.bg,
+                              font=(std.font_title, 39, 'bold'),
+                              fg='white',
+                              bg=std.top_bar_color,
                               text=self.experiment.name)
         self.title.place(rely=0,
                          relx=0.1)
@@ -380,7 +428,7 @@ class ExperimentPCR(CetusPCR):
 
         self.buttons_frame = tk.Frame(master=self,
                                       width=230,
-                                      height=100,
+                                      height=120,
                                       bg=std.bg,
                                       bd=0,
                                       relief=std.relief,
@@ -393,29 +441,32 @@ class ExperimentPCR(CetusPCR):
                                  relx=0.5,
                                  rely=1,
                                  y=50)
-        self.buttons_frame_title = tk.Label(master=self,
-                                            text='Opções',
-                                            font=(std.font_title, 13, 'bold'),
-                                            bg=std.bg,
-                                            fg=std.label_color,
-                                            width=7)
-        self.buttons_frame_title.place(in_=self.buttons_frame,
-                                       bordermode='outside',
-                                       relx=0.05,
-                                       y=-10)
+
         self.buttons_frame.pack_propagate(False)
 
+        self.buttons_image = {}
         self.buttons = {}
-        for but in ('Salvar', 'Executar'):
-            self.buttons[but] = tk.Button(master=self.buttons_frame,
-                                          text=but,
-                                          width=7,
-                                          relief=std.relief,
-                                          font=(std.font_buttons, 13, 'bold'))
-            self.buttons[but].pack(side='left',
-                                   padx=15)
-        self.buttons['Salvar'].configure(command=self.handle_save_button)
-        self.buttons['Executar'].configure(command=self.handle_run_button)
+        for but in std.experimentpcr_buttons_path:
+            if '_icon' in but:
+                self.path_slice = but.split('_')
+                self.path1 = std.experimentpcr_buttons_path[but]
+                self.path2 = std.experimentpcr_buttons_path[
+                    f'{self.path_slice[0]}_highlight']
+                self.new_button = MyButton(master=self.buttons_frame,
+                                           image1=self.path1,
+                                           image2=self.path2,
+                                           activebackground=std.bg,
+                                           width=75,
+                                           bd=0,
+                                           bg=std.bg,
+                                           relief='flat',
+                                           highlightthickness=0)
+
+                self.buttons[but] = self.new_button
+                self.buttons[but].pack(side='left',
+                                       padx=17)
+        self.buttons['save_icon'].configure(command=self.handle_save_button)
+        self.buttons['run_icon'].configure(command=self.handle_run_button)
 
         self.open_experiment()
 
@@ -436,12 +487,6 @@ class ExperimentPCR(CetusPCR):
             .insert(0, self.experiment.number_cycles)
         self.entry_of_options['Temperatura Final'] \
             .insert(0, self.experiment.final_temp)
-
-    def on_hover(self, event=None):
-        self.button_back['bg'] = std.bd
-
-    def on_leave(self, event=None):
-        self.button_back['bg'] = std.bg
 
     def handle_save_button(self):
         self.experiment.denaturation_c = \
@@ -506,6 +551,3 @@ class MonitorPCR(ExperimentPCR):
     def handle_back_button(self):
         self.master.index_exp = self.exp_index
         self.master.switch_frame(ExperimentPCR)
-
-
-initialize_pcr()

@@ -113,19 +113,49 @@ def validate_entry(new_text):
 class ArduinoPCR:
     def __init__(self, baudrate, timeout,
                  experiment: Experiment = None):
+        self.timeout = timeout
+        self.baudrate = baudrate
         self.experiment = experiment
         self.reading = ''
         # Conferir com o nome no Gerenciador de dispositivos do windows
         self.device_type = 'Arduino Uno'
+        self.port_connected = None
+        self.serial_device = None
+        self.is_connected = False
+        self.thread = None
+        self.waiting_update = False
 
+        self.initialize_connection()
+
+    def run_experiment(self):
+        message: str = f'<running: {self.experiment.name}>'
+        self.serial_device.write(b'%a' % message)
+
+    def start_monitor(self):
+        while self.is_connected:
+            # if self.device.port_pcr.in_waiting:
+            try:
+                self.reading = self.serial_device.readline()
+                print(f'(SM) {self.reading}')
+            except serial.SerialException:
+                messagebox.showerror('Dispositivo desconectado',
+                                     'Ocorreu um erro ao se comunicar com '
+                                     'o CetusPCR. Verifique a conexão e '
+                                     'reinicie o aplicativo.')
+                self.is_connected = False
+                self.waiting_update = True
+                std.hover_text = 'Cetus PCR desconectado.'
+
+    def initialize_connection(self):
         try:
             ports = list_ports.comports()
             if not list_ports.comports():
                 raise serial.SerialException
             for port in ports:
                 if self.device_type in port.description:
-                    self.port_pcr = serial.Serial(port.device, baudrate,
-                                                  timeout=timeout)
+                    self.serial_device = serial.Serial(port.device,
+                                                       self.baudrate,
+                                                       timeout=self.timeout)
                     self.is_connected = True
                     self.port_connected = port.device
 
@@ -135,28 +165,10 @@ class ArduinoPCR:
                 else:
                     raise serial.SerialException
         except serial.SerialException:
-            self.port_pcr = None
+            self.serial_device = None
             self.is_connected = False
 
             print('Connection Failed')
 
         if self.is_connected:
             self.thread = thread.start_new_thread(self.start_monitor, ())
-
-    def run_experiment(self):
-        message: str = f'<running: {self.experiment.name}>'
-        self.port_pcr.write(b'%a' % message)
-
-    def start_monitor(self):
-        while self.is_connected:
-            # if self.device.port_pcr.in_waiting:
-            try:
-                self.reading = self.port_pcr.readline()
-                print(f'(SM) {self.reading}')
-            except serial.SerialException:
-                messagebox.showerror('Dispositivo desconectado',
-                                     'Ocorreu um erro ao se comunicar com '
-                                     'o CetusPCR. Verifique a conexão e '
-                                     'reinicie o aplicativo.')
-                self.is_connected = False
-                std.hover_text = 'Cetus PCR desconectado.'
