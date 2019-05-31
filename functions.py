@@ -128,8 +128,10 @@ class ArduinoPCR:
         self.initialize_connection()
 
     def run_experiment(self):
-        message: str = f'<running: {self.experiment.name}>'
-        self.serial_device.write(b'%a' % message)
+        nome = 'wilson'
+        a = f'tempo1:{nome}'
+        for x in 'abcd':
+            self.serial_device.write(b'%a' % x)
 
     def start_monitor(self):
         while self.is_connected:
