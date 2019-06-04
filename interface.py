@@ -1,21 +1,24 @@
 """Design para o aplicativo Cetus PCR.
 
-"Interface" armazena todas as informações sobre os widgets do
+"interface.py" armazena todas as informações sobre os widgets do
 aplicativo.
 
 A estrutura principal do programa é baseada principalmente nessas duas
 classes:
 class CetusPCR -> Seleciona/Cria um experimento;
 class ExperimentPCR -> Edita/Executa o experimento selecionado;
+class MonitorPCR -> Monitora o experimento ativo.
 
-Todas as classes de janelas herdadas da biblioteca tk.Frame.
-Isso é feito apenas por propósitos de design,
-uma vez que facilita a colocação das bordas e organização dos widgets
-dentro da janela.
+Todas as classes de janelas são herdadas da biblioteca tk.Frame.
+Isso é feito apenas por propósitos de design, uma vez que facilita a
+colocação das bordas e organização dos widgets dentro da janela.
+
+Todos os métodos com prefixo "handle" remetem as funções de botões.
 """
 
 import tkinter as tk
 from tkinter import ttk, messagebox
+
 # import matplotlib.pyplot as plt
 # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -33,39 +36,59 @@ class MyButton(tk.Button):
     Por fim, on_hover e on_leave são anexadas ao botão.
     """
 
-    def __init__(self, master, image1, image2, **kw):
+    def __init__(self, master, image1, image2, hover_text=None, **kw):
         self.icon1 = tk.PhotoImage(file=image1)
         self.icon2 = tk.PhotoImage(file=image2)
         super().__init__(master=master, image=self.icon1, **kw)
         self.bind('<Enter>', self.on_hover)
         self.bind('<Leave>', self.on_leave)
+        self.hover_text = hover_text
 
     def on_hover(self, event):
-        """Altera o ícone do botão quando o cursor entra em sua área."""
+        """Altera o ícone do botão quando o cursor entra em sua área.
+
+        Se o botão possuí texto de instrução, ele é exibido na barra
+        inferior.
+        """
         self.configure(image=self.icon2)
+        if self.hover_text is not None:
+            self.master.master.hover_box.configure(text=self.hover_text)
 
     def on_leave(self, event):
         """Altera o ícone do botão quando o cursor saí da sua área."""
         self.configure(image=self.icon1)
+        self.master.master.hover_box.configure(text=std.hover_text)
 
 
 cetus_device = functions.ArduinoPCR(baudrate=9600, timeout=1)
 
 
 class BaseWindow(tk.Tk):
+    """Janela que exibe os widgets ativos de acordo com a classe dada.
+
+    Essa janela é preparada para receber qualquer objeto da classe
+    tk.Frame e exibir o seu conteúdo.
+    """
     def __init__(self):
         tk.Tk.__init__(self)
         self._frame = None
-        self.frame_name = None
-        self.index_exp = None
+        self.configure(width=1000, height=660)
+        self.resizable(False, False)
         self.switch_frame(CetusPCR)
         self.connected_icon = tk.PhotoImage(file='assets/connected_icon.png')
         self.check_if_is_connected()
 
-    def switch_frame(self, new_frame):
-        self.frame_name = str(new_frame)
-        if self.index_exp is not None:
-            new_frame = new_frame(self, self.index_exp)
+    def switch_frame(self, new_frame, index_exp=None):
+        """Função para trocar o conteúdo exibido pela na janela.
+
+        :param new_frame: nova classe ou subclasse da tk.Frame a ser
+        exibida.
+        :param index_exp: existem janelas que lidam com um experimento
+        específico, nesse caso o endereço do mesmo deve ser fornecido.
+        """
+
+        if index_exp is not None:
+            new_frame = new_frame(self, index_exp)
         else:
             new_frame = new_frame(self)
         if self._frame is not None:
@@ -78,17 +101,12 @@ class BaseWindow(tk.Tk):
         """Função para verificar alterações na porta serial.
 
         Essa função roda em looping infinito no background da janela
-        principal.
+        base.
         """
         if self._frame is not None:
             if cetus_device.is_connected:
                 self._frame.side_buttons['reconnect_icon']. \
                     configure(image=self.connected_icon)
-                new_text = f'Cetus PCR Conectado ' \
-                    f'({cetus_device.port_connected}).'
-            else:
-                new_text = f'Cetus PCR Desconectado.'
-            self._frame.hover_box.configure(text=new_text)
         if cetus_device.waiting_update:
             self._frame.side_buttons['reconnect_icon']. \
                 configure(
@@ -105,7 +123,12 @@ class CetusPCR(tk.Frame):
     """
 
     def __init__(self, master: BaseWindow):
-        super().__init__(master)
+        # Configurações da janela master.
+        super().__init__(master,
+                         width=1000,
+                         height=660,
+                         bg=std.bg,
+                         bd=0)
         self.master = master
         self.master.geometry('+200+10')
         self.master.title('Cetus PCR')
@@ -114,13 +137,10 @@ class CetusPCR(tk.Frame):
         self.pack()
         self.pack_propagate(False)
         self.master.focus_force()
-        self.configure(width=1000,
-                       height=660,
-                       bg=std.bg,
-                       bd=0)
 
         self.create_widgets = self._widgets
 
+        # Barra inferior para exibir informações sobre os botões.
         self.hover_box = tk.Label(master=self,
                                   text=std.hover_text,
                                   bg='white',
@@ -130,11 +150,13 @@ class CetusPCR(tk.Frame):
         self.hover_box.pack(side='bottom',
                             fill='x')
 
+        # Barra para os botões laterais.
         self.side_bar_frame = tk.Frame(master=self,
                                        bg=std.side_bar_color)
         self.side_bar_frame.pack(side='left', fill='y')
         self.side_bar_width = 55
 
+        # Barra superior com a logo e o nome do experimento aberto.
         self.top_bar_frame = tk.Frame(master=self,
                                       height=65,
                                       bg=std.top_bar_color)
@@ -148,13 +170,14 @@ class CetusPCR(tk.Frame):
                                    image=self.logo)
         self.logo_label.pack(side='right', padx=10)
 
+        # Criar os botões da barra lateral
         self.side_buttons = {}
         for but in std.side_buttons_path:
             if '_icon' in but:
                 self.path_slice = but.split('_')
+                self.b_name = self.path_slice[0]
                 self.path1 = std.side_buttons_path[but]
-                self.path2 = std.side_buttons_path[
-                    f'{self.path_slice[0]}_highlight']
+                self.path2 = std.side_buttons_path[f'{self.b_name}_highlight']
                 self.new_button = MyButton(master=self.side_bar_frame,
                                            image1=self.path1,
                                            image2=self.path2,
@@ -162,85 +185,88 @@ class CetusPCR(tk.Frame):
                                            activebackground=std.side_bar_color,
                                            bd=0,
                                            bg=std.side_bar_color,
-                                           relief='flat',
-                                           highlightthickness=0)
+                                           hover_text=std.hover_texts[
+                                               self.b_name])
 
                 self.side_buttons[but] = self.new_button
                 if but != 'home_icon':
                     self.new_button.pack(side='bottom', pady=3)
                 else:
                     self.new_button.pack(side='top', pady=3)
-        self.side_buttons['home_icon'].configure(command=
-                                                 self.handle_home_button)
-        self.side_buttons['reconnect_icon'].configure(command=
-                                                      self.handle_reconnect_button)
+        self.side_buttons['home_icon']. \
+            configure(command=self.handle_home_button)
+        self.side_buttons['info_icon']. \
+            configure(command=self.handle_info_button)
+        self.side_buttons['cooling_icon']. \
+            configure(command=self.handle_cooling_button)
+        self.side_buttons['reconnect_icon']. \
+            configure(command=self.handle_reconnect_button)
+        self.side_buttons['settings_icon']. \
+            configure(command=self.handle_settings_button)
 
     def _widgets(self):
-        """Cria os widgets da janela.
+        """Cria os widgets específicos da janela.
 
-        A razão para qual os widgets são colocador em outro método é
-        que essa classe será futuramente herdada pela janela
-        ExperimentPCR e não é suposta para copiar todos os widgets para
-        outra janela, apenas as opções de quadro.
+        Esses widgets são colocados em outro método pois eles não podem
+        herdados pelas outras janelas. O método é sobrescrito em cada
+        nova sub-classe.
         """
 
-        # Criar os widgets
-        self.options_frame = tk.Frame(master=self,
+        self.buttons_frame = tk.Frame(master=self,
                                       width=850,
                                       height=120,
                                       bg=std.bg,
                                       bd=0,
-                                      relief=std.relief,
                                       highlightcolor=std.bd,
                                       highlightbackground=std.bd,
                                       highlightthickness=std.bd_width)
+        self.buttons_frame.place(rely=0.50,
+                                 relx=0.10,
+                                 anchor='w')
+        self.buttons_frame.pack_propagate(False)
 
         self.buttons = {}
-        # Criar e posicionar 3 botões dentro do "options_frame"
+        # Criar e posicionar os botões dentro do "options_frame"
         for but in std.cetuspcr_buttons_path:
             if '_icon' in but:
                 self.path_slice = but.split('_')
+                self.b_name = self.path_slice[0]
                 self.path1 = std.cetuspcr_buttons_path[but]
                 self.path2 = std.cetuspcr_buttons_path[
                     f'{self.path_slice[0]}_highlight']
-                self.new_button = MyButton(master=self.options_frame,
+                self.new_button = MyButton(master=self.buttons_frame,
                                            image1=self.path1,
                                            image2=self.path2,
                                            activebackground=std.bg,
                                            width=75,
                                            bd=0,
                                            bg=std.bg,
-                                           relief='flat',
-                                           highlightthickness=0)
+                                           highlightthickness=0,
+                                           hover_text=std.hover_texts[self.b_name])
 
                 self.buttons[but] = self.new_button
                 self.buttons[but].pack(side='right', padx=8)
-        self.buttons['confirm_icon'].configure(command=self.handle_open_button)
-        self.buttons['add_icon'].configure(command=self.handle_new_button)
-        self.buttons['delete_icon'].configure(
-            command=self.handle_delete_button)
+        self.buttons['confirm_icon']. \
+            configure(command=self.handle_confirm_button)
+        self.buttons['add_icon']. \
+            configure(command=self.handle_new_button)
+        self.buttons['delete_icon']. \
+            configure(command=self.handle_delete_button)
 
-        self.experiment_combo = ttk.Combobox(master=self.options_frame,
+        self.experiment_combo = ttk.Combobox(master=self.buttons_frame,
                                              width=35,
                                              font=(std.font_title, 17))
+        self.experiment_combo.place(rely=0.55,
+                                    relx=0.02,
+                                    anchor='w',
+                                    bordermode='inside')
 
         self.experiment_combo_title = tk.Label(master=self,
                                                font=(std.font_title, 22,
                                                      'bold'),
                                                text='Selecione o experimento:',
-                                               fg=std.label_color,
+                                               fg=std.texts_color,
                                                bg=std.bg)
-
-        # Posicionar os widgets(botões não incluídos)
-        self.options_frame.place(rely=0.50,
-                                 relx=0.10,
-                                 anchor='w')
-        self.options_frame.pack_propagate(False)
-
-        self.experiment_combo.place(rely=0.55,
-                                    relx=0.02,
-                                    anchor='w',
-                                    bordermode='inside')
 
         self.experiment_combo_title.place(in_=self.experiment_combo,
                                           anchor='sw',
@@ -249,14 +275,50 @@ class CetusPCR(tk.Frame):
         self.show_experiments()
 
     def show_experiments(self):
+        """Abre o arquivo com os experimentos salvos e os exibe na
+        self.experiment_combo(ttk.Combobox).
+        """
         functions.experiments = functions.open_pickle(std.exp_path)
         self.experiment_combo.configure(values=functions.experiments)
 
-    def handle_open_button(self):
+    def handle_home_button(self):
+        self.master.index_exp = None
+        self.master.switch_frame(CetusPCR)
+
+    # Ainda não implementado.
+    def handle_info_button(self):
+        pass
+
+    # Ainda não implementado.
+    def handle_cooling_button(self):
+        pass
+
+    @staticmethod
+    def handle_reconnect_button():
+        if not cetus_device.is_connected:
+            cetus_device.initialize_connection()
+            port = cetus_device.port_connected
+            if cetus_device.is_connected:
+                messagebox.showinfo('Cetus PCR',
+                                    'Dispositivo conectado com sucesso na '
+                                    f'porta "{port}"')
+            else:
+                messagebox.showerror('Cetus PCR',
+                                     'Conexão mal-sucedida.')
+        else:
+            messagebox.showinfo('Cetus PCR',
+                                'O Dispositivo já está conectado '
+                                f'({cetus_device.port_connected}).')
+
+    # Ainda não implementado.
+    def handle_settings_button(self):
+        pass
+
+    def handle_confirm_button(self):
         index = self.experiment_combo.current()
         if index >= 0:
             self.master.index_exp = index
-            self.master.switch_frame(ExperimentPCR)
+            self.master.switch_frame(ExperimentPCR, index)
 
     def handle_new_button(self):
         new_experiment = functions.Experiment()
@@ -278,39 +340,26 @@ class CetusPCR(tk.Frame):
                                                      ' vazio')
 
     def handle_delete_button(self):
-        experiment = functions.experiments[self.experiment_combo.current()]
-        delete = messagebox.askyesnocancel('Deletar experimento',
-                                           'Você tem certeza que deseja '
-                                           f'excluir "{experiment.name}"?\n'
-                                           'Essa ação não pode ser desfeita.')
-        if delete:
-            functions.experiments.remove(experiment)
-            functions.dump_pickle(std.exp_path, functions.experiments)
-            self.experiment_combo.configure(values=functions.experiments)
-            self.experiment_combo.delete(0, 'end')
-
-    def handle_home_button(self):
-        self.master.index_exp = None
-        self.master.switch_frame(CetusPCR)
-
-    @staticmethod
-    def handle_reconnect_button():
-        if not cetus_device.is_connected:
-            cetus_device.initialize_connection()
-            port = cetus_device.port_connected
-            if cetus_device.is_connected:
-                messagebox.showinfo('Cetus PCR',
-                                    'Dispositivo conectado com sucesso.\n'
-                                    f'Porta {port}')
-            else:
-                messagebox.showerror('Cetus PCR',
-                                     'Conexão mal-sucedida.')
-        else:
-            messagebox.showinfo('Cetus PCR',
-                                'O Dispositivo já está conectado '
-                                f'({cetus_device.port_connected}).')
+        index = self.experiment_combo.current()
+        experiment = functions.experiments[index]
+        if index >= 0:
+            delete = messagebox. \
+                askyesnocancel('Deletar experimento',
+                               'Você tem certeza que deseja '
+                               f'excluir "{experiment.name}"?\n'
+                               'Essa ação não pode ser desfeita.')
+            if delete:
+                functions.experiments.remove(experiment)
+                functions.dump_pickle(std.exp_path, functions.experiments)
+                self.experiment_combo.configure(values=functions.experiments)
+                self.experiment_combo.delete(0, 'end')
 
     def close_window(self):
+        """Função para sobrescrever o protocolo padrão ao fechar a janela.
+
+        O programa salva todos os experimentos em arquivo externo e depois
+        destrói a janela principal encerrando o programa.
+        """
         functions.dump_pickle(std.exp_path, functions.experiments)
         self.master.destroy()
 
@@ -324,6 +373,8 @@ class ExperimentPCR(CetusPCR):
     configurações de quadro.
     Isso é util pois a janela deve ter a mesma aparência, título, ícone
     e tamanho, porém, com widgets e opções diferentes.
+
+    As barras lateral, superior e inferior também são herdadas.
     """
 
     def __init__(self, master: BaseWindow, exp_index):
@@ -336,7 +387,7 @@ class ExperimentPCR(CetusPCR):
     def _widgets(self):
         self.title = tk.Label(master=self,
                               font=(std.font_title, 39, 'bold'),
-                              fg='white',
+                              fg=std.texts_color,
                               bg=std.top_bar_color,
                               text=self.experiment.name)
         self.title.place(rely=0,
@@ -370,7 +421,7 @@ class ExperimentPCR(CetusPCR):
                     text = 'Seg'
                 unit_label = tk.Label(master=self,
                                       text=text,
-                                      fg=std.label_color,
+                                      fg=std.texts_color,
                                       bg=std.bg,
                                       font=(std.font_title, 14, 'bold'))
                 unit_label.place(in_=entry,
@@ -382,7 +433,7 @@ class ExperimentPCR(CetusPCR):
                              font=(std.font_title, 20, 'bold'),
                              text=stage + ':',
                              bg=std.bg,
-                             fg=std.label_color)
+                             fg=std.texts_color)
             label.place(in_=self.entry_of_options[f'{stage} Temperatura'],
                         anchor='sw',
                         y=-10,
@@ -408,7 +459,7 @@ class ExperimentPCR(CetusPCR):
             label = tk.Label(master=self,
                              font=(std.font_title, 20, 'bold'),
                              text=option + ':',
-                             fg=std.label_color,
+                             fg=std.texts_color,
                              bg=std.bg)
             label.place(in_=entry,
                         anchor='s',
@@ -420,7 +471,7 @@ class ExperimentPCR(CetusPCR):
                                       font=(std.font_title, 14, 'bold'),
                                       text='°C',
                                       bg=std.bg,
-                                      fg=std.label_color)
+                                      fg=std.texts_color)
                 unit_label.place(in_=entry,
                                  relx=1,
                                  rely=0,
@@ -441,14 +492,12 @@ class ExperimentPCR(CetusPCR):
                                  relx=0.5,
                                  rely=1,
                                  y=50)
-
         self.buttons_frame.pack_propagate(False)
-
-        self.buttons_image = {}
         self.buttons = {}
         for but in std.experimentpcr_buttons_path:
             if '_icon' in but:
                 self.path_slice = but.split('_')
+                self.b_name = self.path_slice[0]
                 self.path1 = std.experimentpcr_buttons_path[but]
                 self.path2 = std.experimentpcr_buttons_path[
                     f'{self.path_slice[0]}_highlight']
@@ -459,8 +508,8 @@ class ExperimentPCR(CetusPCR):
                                            width=75,
                                            bd=0,
                                            bg=std.bg,
-                                           relief='flat',
-                                           highlightthickness=0)
+                                           highlightthickness=0,
+                                           hover_text=std.hover_texts[self.b_name])
 
                 self.buttons[but] = self.new_button
                 self.buttons[but].pack(side='left',
@@ -506,7 +555,8 @@ class ExperimentPCR(CetusPCR):
         self.experiment.final_temp = \
             self.entry_of_options['Temperatura Final'].get()
         functions.dump_pickle(std.exp_path, functions.experiments)
-        messagebox.showinfo('Cetus PCR', 'Experimento salvo :]', parent=self)
+        messagebox.showinfo('Cetus PCR',
+                            f'"{self.experiment.name}" salvo :]', parent=self)
 
     def handle_back_button(self):
         self.master.index_exp = None
@@ -515,8 +565,7 @@ class ExperimentPCR(CetusPCR):
     def handle_run_button(self):
         if cetus_device.is_connected:
             cetus_device.run_experiment()
-            self.master.index_exp = self.exp_index
-            self.master.switch_frame(MonitorPCR)
+            self.master.switch_frame(MonitorPCR, self.exp_index)
         else:
             messagebox.showerror('Executar Experimento',
                                  'Dispositivo Cetus PCR não conectado!',
@@ -547,7 +596,3 @@ class MonitorPCR(ExperimentPCR):
     def update_text(self):
         self.info_label.configure(text=f'Value: {cetus_device.reading}')
         self.after(1, self.update_text)
-
-    def handle_back_button(self):
-        self.master.index_exp = self.exp_index
-        self.master.switch_frame(ExperimentPCR)

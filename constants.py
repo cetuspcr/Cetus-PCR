@@ -3,11 +3,9 @@
 # Design gráfico; Geralmente nomeados com base nas constantes do tkinter.
 bg = '#434343'
 bd = '#2ecc71'
-# bd = 'SeaGreen2'
 bd_width = 3
 relief = 'flat'
-label_color = 'white'
-# side_bar_color = '#32615d'
+texts_color = 'white'
 side_bar_color = '#383838'
 top_bar_color = '#3f9b6b'
 bg_image_path = 'assets/background_logo.png'
@@ -28,23 +26,32 @@ side_buttons_path = {'home_icon': 'assets/home_icon.png',
                      'settings_highlight': 'assets/settings_highlight.png',
                      'reconnect_highlight': 'assets/reconnect_highlight.png',
                      'cooling_highlight': 'assets/cooling_highlight.png',
-                     'info_highlight': 'assets/info_highlight.png'
-                     }
-
+                     'info_highlight': 'assets/info_highlight.png'}
 cetuspcr_buttons_path = {'add_icon': 'assets/add_icon.png',
                          'delete_icon': 'assets/delete_icon.png',
                          'confirm_icon': 'assets/confirm_icon.png',
                          'add_highlight': 'assets/add_highlight.png',
                          'delete_highlight': 'assets/delete_highlight.png',
-                         'confirm_highlight': 'assets/confirm_highlight.png'
-                         }
-
+                         'confirm_highlight': 'assets/confirm_highlight.png'}
 experimentpcr_buttons_path = {'save_icon': 'assets/save_icon.png',
                               'run_icon': 'assets/run_icon.png',
                               'save_highlight': 'assets/save_highlight.png',
-                              'run_highlight': 'assets/run_highlight.png'
-                              }
+                              'run_highlight': 'assets/run_highlight.png'}
 
-hover_text = 'Feito com ♥ pelo 3º Mecatrônica (2k19).'
+hover_texts = {
+    'home': 'Voltar a tela inicial.',
+    'info': 'Exibir informações do programa.',
+    'cooling': 'Iniciar processo de resfriamento.',
+    'reconnect': 'Iniciar conexão com o Cetus PCR.',
+    'settings': 'Exibir configurações dos processos padrões.',
+    'add': 'Adicionar um novo experimento.',
+    'delete': 'Remove o experimento selecionado.',
+    'confirm': 'Exibir as informações do experimento selecionado.',
+    'save': 'Salva as informações do experimento atual.',
+    'run': 'Iniciar experimento.'
+}
+
+hover_text = 'Feito com ♥ (e movido a base de muito ódio) ' \
+             'pelo 3º Mecatrônica (2k19).'
 
 exp_path = 'experiments.pcr'
