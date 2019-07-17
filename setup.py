@@ -1,28 +1,34 @@
+"""Script para exportar o script em python para uma aplicação
+de Windows independente. Um instalador pode ser gerado posteriormente
+usando o Inno Setup.
+
+A pasta "assets" contém todos os arquivos adicionais para o programa
+tais como ícones e DLL necessárias.
+
+Para a gerar os arquivos necessários, abra o prompt de comando e navegue
+para a pasta raiz do projeto e execute o seguinte comando:
+'python setup.py build'
+
+Requer cx_Freeze e Python 3.7 no PATH do sistema.
+"""
 
 import os
-import tkinter
+
 from cx_Freeze import setup, Executable
 
-os.environ[
-    'TCL_LIBRARY'] = r'C:\Users\WILSONCAZARRESOUSA\AppData\Local\Programs\Python\Python37-32\tcl\tcl8.6'
-os.environ[
-    'TK_LIBRARY'] = r'C:\Users\WILSONCAZARRESOUSA\AppData\Local\Programs\Python\Python37-32\tcl\tk8.6'
+os.environ['TCL_LIBRARY'] = r'C:\Users\WILSONCAZARRESOUSA\AppData\Local\Programs\Python\Python37-32\tcl\tcl8.6'
+os.environ['TK_LIBRARY'] = r'C:\Users\WILSONCAZARRESOUSA\AppData\Local\Programs\Python\Python37-32\tcl\tk8.6'
 
 executables = [Executable('Cetus PCR.py',
                           base='Win32GUI',
-                          shortcutName='Cetus PCR',
-                          shortcutDir='DesktopFolder',
-                          icon='cetus.ico'),
+                          icon='assets/cetus.ico'),
                Executable('functions.py', base='Win32GUI'),
                Executable('interface.py', base='Win32GUI')]
 
-setup(
-    name='ProjetoCetus',
-    version='0.1',
-    executables=executables,
-    options={'build_exe':
-                 {'includes': ['tkinter', 'serial', 'matplotlib'],
-                  'include_files': ['cetus.ico', 'assets/tcl86t.dll',
-                                    'assets/tk86t.dll'],
-                  'include_msvcr': True, }}
-)
+setup(name='Cetus PCR',
+      version='0.2',
+      description='Interface para o Cetus PCR',
+      executables=executables,
+      options={'build_exe': {'includes': ['tkinter', 'serial', 'matplotlib'],
+                             'include_files': ['assets/'],
+                             'include_msvcr': True, }})

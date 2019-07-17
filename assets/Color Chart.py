@@ -91,7 +91,7 @@ for color in COLORS:
         font=(None, -FONT_SIZE))
   e.grid(row=row, column=col, sticky=E+W)
   row += 1
-  if (row > 36):
+  if row > 36:
     row = 0
     col += 1
 

@@ -1,5 +1,3 @@
-# Parâmetros iniciais para os widgets
-
 # Design gráfico; Geralmente nomeados com base nas constantes do tkinter.
 bg = '#434343'
 bd = '#2ecc71'
@@ -7,13 +5,17 @@ bd_width = 3
 relief = 'flat'
 texts_color = 'white'
 side_bar_color = '#383838'
-top_bar_color = '#3f9b6b'
-bg_image_path = 'assets/background_logo.png'
-logo_image_path = 'assets/header_cetus.png'
+# top_bar_color = '#3f9b6b'
+top_bar_color = '#529E76'
+header_image_path = 'assets/header_cetus.png'
+logo_image_path = 'assets/logo.png'
 
 # Fontes
 font_title = 'Courier New'
 font_buttons = 'Arial'
+font_hover = 'Arial'
+font_entry_title = 'Courier New'
+font_entry = 'Courier New'
 
 # Ícones para interface em geral
 window_icon = 'assets/cetus.ico'
@@ -39,6 +41,7 @@ experimentpcr_buttons_path = {'save_icon': 'assets/save_icon.png',
                               'run_highlight': 'assets/run_highlight.png'}
 
 hover_texts = {
+    'default': 'Feito com ♥ na ETEC PV pelo 3º Mecatrônica(2k19).',
     'home': 'Voltar a tela inicial.',
     'info': 'Exibir informações do programa.',
     'cooling': 'Iniciar processo de resfriamento.',
@@ -50,8 +53,5 @@ hover_texts = {
     'save': 'Salva as informações do experimento atual.',
     'run': 'Iniciar experimento.'
 }
-
-hover_text = 'Feito com ♥ (e movido a base de muito ódio) ' \
-             'pelo 3º Mecatrônica (2k19).'
 
 exp_path = 'experiments.pcr'
