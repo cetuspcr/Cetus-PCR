@@ -288,7 +288,7 @@ class CetusWindow(tk.Frame):
         """Abre o arquivo com os experimentos salvos e os exibe na
         self.experiment_combo(ttk.Combobox).
         """
-        fc.experiments = fc.open_pickle(std.exp_path)
+        fc.experiments = fc.open_pickle_file(std.exp_path)
         values = []
         for exp in fc.experiments:
             values.append(exp.name)
@@ -341,7 +341,7 @@ class CetusWindow(tk.Frame):
 
         if new_experiment.name != '' and new_experiment.name is not None:
             fc.experiments.append(new_experiment)
-            fc.dump_pickle(std.exp_path, fc.experiments)
+            fc.save_pickle_file(std.exp_path, fc.experiments)
             index_exp = fc.experiments.index(new_experiment)
             self.show_experiments()
             self.master.switch_frame(ExperimentWindow, index_exp)
@@ -361,7 +361,7 @@ class CetusWindow(tk.Frame):
                                'Essa ação não pode ser desfeita.')
             if delete:
                 fc.experiments.remove(experiment)
-                fc.dump_pickle(std.exp_path, fc.experiments)
+                fc.save_pickle_file(std.exp_path, fc.experiments)
                 self.show_experiments()
                 self.experiment_combo.delete(0, 'end')
 
@@ -371,7 +371,10 @@ class CetusWindow(tk.Frame):
         O programa salva todos os experimentos em arquivo externo e depois
         destrói a janela principal encerrando o programa.
         """
-        fc.dump_pickle(std.exp_path, fc.experiments)
+        fc.save_pickle_file(std.exp_path, fc.experiments)
+        cetus_device.is_connected = False
+        cetus_device.serial_device.close()
+        print('Closing serial port.')
         self.master.destroy()
 
 
@@ -558,7 +561,7 @@ class ExperimentWindow(CetusWindow):
                                      self.entry_of_options[
                                          f'{step} Tempo'].get())
 
-        fc.dump_pickle(std.exp_path, fc.experiments)
+        fc.save_pickle_file(std.exp_path, fc.experiments)
 
     def handle_back_button(self):
         self.master.index_exp = None
@@ -566,7 +569,6 @@ class ExperimentWindow(CetusWindow):
 
     def handle_run_button(self):
         if cetus_device.is_connected:
-            cetus_device.is_running = True
             self.master.experiment_thread = \
                 thread.start_new_thread(cetus_device.run_experiment, ())
             self.master.switch_frame(MonitorWindow, self.exp_index)

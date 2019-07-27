@@ -12,9 +12,8 @@ experiments = []
 
 
 class ExperimentPCR:
-    """Constrói um objeto Experiment, o qual contêm todas as informações
-    temperatura e tempo dos processos.
-
+    """Um objeto que contêm todas as informações de temperatura e tempo dos
+    processos.
     Esses objetos são salvos na lista "experiments" e posteriormente
     carregados em um arquivo externo usando o módulo pickle.
 
@@ -38,6 +37,40 @@ class ExperimentPCR:
                     f'{str_steps}'
         return final_str
 
+    def __iter__(self):
+        """Define o estado inicial das variáveis de controle.
+
+        :return: O próprio objeto.
+        """
+        self.cur_cycle = 1
+        self.cur_time = 0
+        self.cur_step_idx = 0
+        self.is_running = True
+        self.new_cycle = True
+        # O monitor serial irá modificar essa variável quando o dispositivo
+        # estiver esperando por instruções.
+        self.is_awaiting = True
+        return self
+
+    def __next__(self):
+        sleep(.1)
+        while True:  # While True para prevenir um retorno Nulo
+            if self.is_awaiting:
+                step: StepPCR = self.steps[self.cur_step_idx]
+                rv = f'<pcrstep {step.temperature} {step.duration}>'
+                if self.cur_cycle >= int(self.cycles) and \
+                        self.cur_step_idx >= 2:
+                    self.is_running = False
+                    raise StopIteration
+                elif self.cur_step_idx >= 2:
+                    self.cur_step_idx = 0
+                    self.cur_cycle += 1
+                else:
+                    self.cur_step_idx += 1
+                # self.is_awaiting = False
+                return b'%a\r\n' % rv  # Converte a string em bytes antes de
+                # retorna-la
+
     def check_fields(self):
         pass
 
@@ -51,10 +84,6 @@ class StepPCR:
         self.name = name
         self.temperature = temp
         self.duration = duration
-
-    @classmethod
-    def from_string(cls, ):
-        pass
 
     def __add__(self, other):
         return self.duration + other.duration
@@ -74,7 +103,7 @@ class ArduinoPCR:
                  experiment: ExperimentPCR = None):
         self.timeout = timeout
         self.baudrate = baudrate
-        self.experiment = experiment
+        self.experiment: ExperimentPCR = experiment
 
         # Conferir com o nome no Gerenciador de dispositivos do windows
         # caso esteja usando um arduino diferente.
@@ -84,59 +113,37 @@ class ArduinoPCR:
         self.serial_device = None
         self.is_connected = False
         self.waiting_update = False
+        self.monitor_thread = None
 
         self.reading = ''
-        self.cur_cycle = None
-        self.cur_temperature_pcr = None
-        self.cur_temperature_lid = None
-        self.cur_time = 0
-        self.cur_stage = None
-        self.is_running = False
-        self.new_cycle = False
 
         self.initialize_connection()
 
     def run_experiment(self):
-        self.cur_time = 0
-        for _ in range(int(self.experiment.number_cycles)):
-            for step in ('denaturation', 'annealing', 'extension'):
-                if self.is_running:
-                    self.cur_stage = step.capitalize()
+        # Esse processo deve ser rodado em outra thread para evitar a parada
+        # do mainloop da janela principal.
+        for cmd in self.experiment:
+            self.serial_device.write(cmd)
 
-                    temperature = self.experiment.__dict__[f'{step}_c']
-                    time = self.experiment.__dict__[f'{step}_t']
-                    cmd = b'setTemp:: %d' % c_to_pwm(temperature)
-                    self.serial_device.write(cmd)
+    def serial_monitor(self):
+        """Função para monitoramento da porta serial do Arduino.
 
-                    while not self.new_cycle:
-                        pass
-                    if self.new_cycle:
-                        for t in range(time):
-                            if self.is_running:
-                                print('Current step time:', t + 1)
-                                sleep(1)
-                                self.cur_time += 1
-                            else:
-                                break
-                        self.new_cycle = False
-                else:
-                    break
+        Todas as informações provenientes da porta serial são exibidas
+        no prompt padrão do Python.
+        Determinadas informações também são guardadas em variáveis para
+        serem posteriormente exibidas para o usuário.
 
-    def start_monitor(self):
+        Esse processo deve ser rodado em outra thread para evitar a parada
+        do mainloop da janela principal.
+        """
+
         while self.is_connected:
             try:
                 self.reading = self.serial_device.readline()
                 self.reading = str(self.reading).replace(r'\r\n', '')
-                if 'pcr_sensor::' in self.reading:
-                    self.cur_temperature_pcr = \
-                        self.reading.split('::')[1].replace("'", '')
-                elif 'lid_sensor::' in self.reading:
-                    self.cur_temperature_lid = \
-                        self.reading.split('::')[1].replace("'", '')
-                elif 'setting_peltier::' in self.reading:
-                    self.new_cycle = True
-                    print(f'(SM) {self.reading}')
-                else:
+                if 'await' in self.reading:
+                    self.experiment.is_awaiting = True
+                if self.reading != "b''":
                     print(f'(SM) {self.reading}')
             except serial.SerialException:
                 messagebox.showerror('Dispositivo desconectado',
@@ -145,8 +152,8 @@ class ArduinoPCR:
                                      'reinicie o aplicativo.')
                 self.is_connected = False
                 self.waiting_update = True
-                self.is_running = False
                 std.hover_text = 'Cetus PCR desconectado.'
+        return  # Return para encerrar a thread
 
     def initialize_connection(self):
         try:
@@ -175,7 +182,8 @@ class ArduinoPCR:
             print('Connection Failed')
 
         if self.is_connected:
-            thread.start_new_thread(self.start_monitor, ())
+            self.monitor_thread = thread.start_new_thread(self.serial_monitor,
+                                                          ())
 
 
 class StringDialog(simpledialog._QueryString):
@@ -194,20 +202,20 @@ def ask_string(title, prompt, **kwargs):
     return d.result
 
 
-def open_pickle(path: str) -> list:
+def open_pickle_file(path: str) -> list:
     """Função para descompactar a lista do arquivo experiments.pcr
     (gerado pelo pickle).
     Caso o arquivo não seja encontrado, retorna uma lista vazia.
 
     :param path: O caminho do arquivo de experimentos.
 
-    :return: Retorna uma lista com os experimentos no arquivo, ou uma
+    :return: Uma lista com os experimentos no arquivo, ou uma
     lista vazia caso o arquivo não exista.
     """
     try:
         with open(path, 'rb') as infile:
-            newlist = pickle.load(infile)
-            return newlist
+            new_list = pickle.load(infile)
+            return new_list
     except FileNotFoundError:
         return []
     except PermissionError:
@@ -217,7 +225,7 @@ def open_pickle(path: str) -> list:
                              'e tente novamente.')
 
 
-def dump_pickle(path: str, obj: object):
+def save_pickle_file(path: str, obj: object):
     """Salva um objeto no formato binário, utilizando serialização do
     módulo pickle.
 
