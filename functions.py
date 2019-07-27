@@ -50,10 +50,10 @@ class ExperimentPCR:
         # O monitor serial irá modificar essa variável quando o dispositivo
         # estiver esperando por instruções.
         self.is_awaiting = True
+        sleep(.5)  # Delay para a janela carregar completamente
         return self
 
     def __next__(self):
-        sleep(.1)
         while True:  # While True para prevenir um retorno Nulo
             if self.is_awaiting:
                 step: StepPCR = self.steps[self.cur_step_idx]
@@ -61,13 +61,14 @@ class ExperimentPCR:
                 if self.cur_cycle >= int(self.cycles) and \
                         self.cur_step_idx >= 2:
                     self.is_running = False
+                    print('Stop Iteration')
                     raise StopIteration
                 elif self.cur_step_idx >= 2:
                     self.cur_step_idx = 0
                     self.cur_cycle += 1
                 else:
                     self.cur_step_idx += 1
-                # self.is_awaiting = False
+                self.is_awaiting = False
                 return b'%a\r\n' % rv  # Converte a string em bytes antes de
                 # retorna-la
 
@@ -141,7 +142,7 @@ class ArduinoPCR:
             try:
                 self.reading = self.serial_device.readline()
                 self.reading = str(self.reading).replace(r'\r\n', '')
-                if 'await' in self.reading:
+                if 'nextpls' in self.reading:
                     self.experiment.is_awaiting = True
                 if self.reading != "b''":
                     print(f'(SM) {self.reading}')
