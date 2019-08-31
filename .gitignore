@@ -3,6 +3,7 @@ cetus.ico
 venv/
 .vscode/
 __pycache__/
+.build/
 build/
 dist/
 

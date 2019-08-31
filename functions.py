@@ -79,7 +79,10 @@ class ArduinoPCR:
         self.waiting_update = False
         self.monitor_thread = None
 
-        self.current_temperature = 0
+        self.is_running = False
+        self.current_sample_temperature = 0
+        self.current_lid_temperature = 0
+        self.elapsed_time = 0
 
         self.reading = ''
 
@@ -87,21 +90,30 @@ class ArduinoPCR:
 
     def run_experiment(self):
         self.serial_device.write(b'<printTemps 1>')
+        sleep(1)
+        started_time = time()
         for i in range(int(self.experiment.cycles)):
             for step in self.experiment.steps:
                 print(f'step name: {step.name}')
                 set_point = int(step.temperature)
                 duration = int(step.duration)
-                started_time = time()
+                started_step_time = time()
                 self.pid.setpoint = set_point
-                while time() - started_time <= duration:
-                    output = self.pid(self.current_temperature)
-                    if output > 0:
-                        rv = f'<peltier 0 {int(output):03}>'
-                    elif output < 0:
-                        rv = f'<peltier 1 {int(output):03}>'
-                    self.serial_device.write(b'%a\r\n' % rv)
-                print(f"step time: {time() - started_time}")
+                while time() - started_step_time <= duration:
+                    if self.is_running:
+                        output = self.pid(self.current_sample_temperature)
+                        if output > 0:
+                            rv = f'<peltier 0 {int(output):03}>'
+                        elif output < 0:
+                            rv = f'<peltier 1 {int(output):03}>'
+                        self.serial_device.write(b'%a\r\n' % rv)
+                        self.elapsed_time = int(time() - started_time)
+                    else:
+                        print('cancelled')
+                        self.serial_device.write(b'<printTemps 0>')
+                        return
+                print(f"step time: {time() - started_step_time}")
+        print(f'Finish time: {time() - started_time}')
         self.serial_device.write(b'<printTemps 0>')
 
         # Esse processo deve ser rodado em outra thread para evitar a parada
@@ -126,8 +138,11 @@ class ArduinoPCR:
                 self.reading = self.serial_device.readline().decode()
                 self.reading = self.reading.strip('\r\n')
                 if 'tempSample' in self.reading:
-                    self.current_temperature = float(self.reading.split(' '
-                                                                        '')[1])
+                    self.current_sample_temperature = \
+                        float(self.reading.split()[1])
+                elif 'tempLid' in self.reading:
+                    self.current_lid_temperature = \
+                        float(self.reading.split()[1])
                 elif self.reading != '' and 'tempLid' not in self.reading:
                     print(f'(SM) {repr(self.reading)}')
 

@@ -27,7 +27,7 @@ from tkinter import ttk, messagebox
 import constants as std
 import functions as fc
 
-cetus_device = fc.ArduinoPCR(baudrate=19200, timeout=1)
+cetus_device = fc.ArduinoPCR(baudrate=9600, timeout=0.1)
 
 
 class MyButton(tk.Button):
@@ -46,6 +46,7 @@ class MyButton(tk.Button):
         super().__init__(master=master, image=self.icon1, **kw)
         self.bind('<Enter>', self.on_hover)
         self.bind('<Leave>', self.on_leave)
+        self.master = master
         self.hover_text = hover_text
 
     def on_hover(self, event):
@@ -58,7 +59,8 @@ class MyButton(tk.Button):
         if self['state'] == 'normal':
             self.configure(image=self.icon2)
             if self.hover_text is not None:
-                self.master.master.hover_box.configure(text=self.hover_text)
+                self.master.master.hover_box.configure(
+                    text=self.hover_text)
 
     def on_leave(self, event):
         """Altera o ícone do botão quando o cursor saí da sua área."""
@@ -80,6 +82,7 @@ class BaseWindow(tk.Tk):
         self._frame = None
         self.geometry('1000x660+200+10')
         self.resizable(False, False)
+
         self.switch_frame(CetusWindow)
         self.connected_icon = tk.PhotoImage(file='assets/connected_icon.png')
         self.check_if_is_connected()
@@ -119,7 +122,7 @@ class BaseWindow(tk.Tk):
                 configure(
                 image=self._frame.side_buttons['reconnect_icon'].icon1)
             cetus_device.waiting_update = False
-        self.after(50, self.check_if_is_connected)
+        self.after(400, self.check_if_is_connected)
 
 
 class CetusWindow(tk.Frame):
@@ -396,6 +399,7 @@ class ExperimentWindow(CetusWindow):
     def __init__(self, master: BaseWindow, exp_index):
         super().__init__(master)
         self.exp_index = exp_index
+        self.master = master
         self.experiment: fc.ExperimentPCR = fc.experiments[exp_index]
         self.vcmd = self.master.register(fc.validate_entry)
         cetus_device.experiment = self.experiment
@@ -570,6 +574,7 @@ class ExperimentWindow(CetusWindow):
 
     def handle_run_button(self):
         if cetus_device.is_connected:
+            cetus_device.is_running = True
             self.master.experiment_thread = \
                 thread.start_new_thread(cetus_device.run_experiment, ())
             self.master.switch_frame(MonitorWindow, self.exp_index)
@@ -585,6 +590,7 @@ class MonitorWindow(ExperimentWindow):
     def __init__(self, master: BaseWindow, exp_index):
         fc.experiments = fc.open_pickle_file(std.EXP_PATH)
         super().__init__(master, exp_index)
+        self.master = master
 
     def _widgets(self):
         self.data = {}
@@ -620,7 +626,7 @@ class MonitorWindow(ExperimentWindow):
                              relx=0.5,
                              anchor='n',
                              y=gapy)
-            new_value2 = tk.Label(master=self,
+            new_value2 = tk.Label(master=self.master,
                                   font=(std.FONT_TITLE, 50, 'bold'),
                                   bg=std.BG,
                                   fg=std.TEXTS_COLOR)
@@ -633,23 +639,39 @@ class MonitorWindow(ExperimentWindow):
             gapx += 500
             gapy = 0
 
-        self.cancel_button = tk.Button(master=self,
-                                       text='Cancelar',
-                                       relief=std.RELIEF,
-                                       font=('Arial', 13),
-                                       command=self.handle_cancel_button)
-        self.cancel_button.place(relx=0.8,
-                                 rely=0.8,
-                                 y=15,
-                                 anchor='center')
+        self.frame1 = tk.Frame(master=self)
+        self.frame1.place(relx=0.8,
+                          rely=0.8,
+                          x=-8,
+                          y=15,
+                          anchor='center')
+
+        self.cancel_button = MyButton(master=self.frame1,
+                                      relief=std.RELIEF,
+                                      command=self.handle_cancel_button,
+                                      image1=std.cetuspcr_buttons_path[
+                                          'delete_icon'],
+                                      image2=std.cetuspcr_buttons_path[
+                                          'delete_highlight'],
+                                      hover_text=std.hover_texts['cancel'],
+                                      activebackground=std.BG,
+                                      width=75,
+                                      bd=0,
+                                      bg=std.BG,
+                                      highlightthickness=0)
+
+        self.cancel_button.pack()
         self.update_labels()
 
     def update_labels(self):
-        self.data['Temperatura Amostra'].\
-            configure(text=cetus_device.current_temperature)
-        self.data['Temperatura Tampa'].configure(text='')
-        self.data['Tempo Est. Restante'].configure(text='')
-        self.data['Tempo Decorrido'].configure(text='')
+        self.data['Temperatura Amostra']. \
+            configure(text=cetus_device.current_sample_temperature)
+        self.data['Temperatura Tampa']. \
+            configure(text=cetus_device.current_lid_temperature)
+        self.data['Tempo Est. Restante']. \
+            configure(text='')
+        self.data['Tempo Decorrido']. \
+            configure(text=cetus_device.elapsed_time)
         self.after(250, self.update_labels)
 
     def handle_cancel_button(self):

@@ -1,7 +1,7 @@
 #include "serialtools.h"
 
 void setup(){
-    Serial.begin(19200);
+    Serial.begin(9600);
     Serial.println("Cetus is ready.");
     temperatureSensor.begin();
     temperatureSensor.setResolution(10);

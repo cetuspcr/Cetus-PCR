@@ -51,7 +51,8 @@ hover_texts = {
     'delete': 'Remove o experimento selecionado.',
     'confirm': 'Exibir as informações do experimento selecionado.',
     'save': 'Salva as informações do experimento atual.',
-    'run': 'Iniciar experimento.'
+    'run': 'Iniciar experimento.',
+    'cancel': 'Cancelar a execução do experimento atual'
 }
 
 EXP_PATH = 'experiments.pcr'
