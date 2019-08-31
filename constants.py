@@ -1,24 +1,24 @@
 # Design gráfico; Geralmente nomeados com base nas constantes do tkinter.
-bg = '#434343'
-bd = '#2ecc71'
-bd_width = 3
-relief = 'flat'
-texts_color = 'white'
-side_bar_color = '#383838'
+BG = '#434343'
+BD = '#2ecc71'
+BD_WIDTH = 3
+RELIEF = 'flat'
+TEXTS_COLOR = 'white'
+SIDE_BAR_COLOR = '#383838'
 # top_bar_color = '#3f9b6b'
-top_bar_color = '#529E76'
-header_image_path = 'assets/header_cetus.png'
-logo_image_path = 'assets/logo.png'
+TOP_BAR_COLOR = '#529E76'
+HEADER_IMAGE_PATH = 'assets/header_cetus.png'
+LOGO_IMAGE_PATH = 'assets/logo.png'
 
 # Fontes
-font_title = 'Courier New'
-font_buttons = 'Arial'
-font_hover = 'Arial'
-font_entry_title = 'Courier New'
-font_entry = 'Courier New'
+FONT_TITLE = 'Courier New'
+FONT_BUTTONS = 'Arial'
+FONT_HOVER = 'Arial'
+FONT_ENTRY_TITLE = 'Courier New'
+FONT_ENTRY = 'Courier New'
 
 # Ícones para interface em geral
-window_icon = 'assets/cetus.ico'
+WINDOW_ICON = 'assets/cetus.ico'
 side_buttons_path = {'home_icon': 'assets/home_icon.png',
                      'settings_icon': 'assets/settings_icon.png',
                      'reconnect_icon': 'assets/reconnect_icon.png',
@@ -54,4 +54,4 @@ hover_texts = {
     'run': 'Iniciar experimento.'
 }
 
-exp_path = 'experiments.pcr'
+EXP_PATH = 'experiments.pcr'

@@ -1,14 +1,13 @@
 import pickle
-from time import sleep
+from time import sleep, time
 import _thread as thread
 from tkinter import simpledialog, messagebox
 
 import serial  # Listado como pyserial em requirements.txt
 from serial.tools import list_ports
+from simple_pid import PID
 
 import constants as std
-
-experiments = []
 
 
 class ExperimentPCR:
@@ -32,48 +31,10 @@ class ExperimentPCR:
         for step in self.steps:
             str_steps += f'-{str(step)}\n'
         final_str = f'\nNome do Experimento: "{self.name}"\n' \
-                    f'->Nº de ciclos: {self.cycles}\n' \
-                    f'->Temperatura Final: {self.final_hold}°C\n' \
-                    f'{str_steps}'
+            f'->Nº de ciclos: {self.cycles}\n' \
+            f'->Temperatura Final: {self.final_hold}°C\n' \
+            f'{str_steps}'
         return final_str
-
-    def __iter__(self):
-        """Define o estado inicial das variáveis de controle.
-
-        :return: O próprio objeto.
-        """
-        self.cur_cycle = 1
-        self.cur_time = 0
-        self.cur_step_idx = 0
-        self.is_running = True
-        self.new_cycle = True
-        # O monitor serial irá modificar essa variável quando o dispositivo
-        # estiver esperando por instruções.
-        self.is_awaiting = True
-        sleep(.5)  # Delay para a janela carregar completamente
-        return self
-
-    def __next__(self):
-        while True:  # While True para prevenir um retorno Nulo
-            if self.is_awaiting:
-                step: StepPCR = self.steps[self.cur_step_idx]
-                rv = f'<pcrstep {step.temperature} {step.duration}>'
-                if self.cur_cycle >= int(self.cycles) and \
-                        self.cur_step_idx >= 2:
-                    self.is_running = False
-                    print('Stop Iteration')
-                    raise StopIteration
-                elif self.cur_step_idx >= 2:
-                    self.cur_step_idx = 0
-                    self.cur_cycle += 1
-                else:
-                    self.cur_step_idx += 1
-                self.is_awaiting = False
-                return b'%a\r\n' % rv  # Converte a string em bytes antes de
-                # retorna-la
-
-    def check_fields(self):
-        pass
 
     def add_step(self, name, temp, duration):
         new_step = StepPCR(name, temp, duration)
@@ -105,26 +66,48 @@ class ArduinoPCR:
         self.timeout = timeout
         self.baudrate = baudrate
         self.experiment: ExperimentPCR = experiment
+        self.pid = PID(Kp=1, Ki=0, Kd=0,
+                       output_limits=(-255, 255))
 
         # Conferir com o nome no Gerenciador de dispositivos do windows
         # caso esteja usando um arduino diferente.
-        self.device_type = 'Arduino Uno'
+        self.device_type = ''
 
         self.port_connected = None
-        self.serial_device = None
+        self.serial_device: serial.Serial = None
         self.is_connected = False
         self.waiting_update = False
         self.monitor_thread = None
+
+        self.current_temperature = 0
 
         self.reading = ''
 
         self.initialize_connection()
 
     def run_experiment(self):
+        self.serial_device.write(b'<printTemps 1>')
+        for i in range(int(self.experiment.cycles)):
+            for step in self.experiment.steps:
+                print(f'step name: {step.name}')
+                set_point = int(step.temperature)
+                duration = int(step.duration)
+                started_time = time()
+                self.pid.setpoint = set_point
+                while time() - started_time <= duration:
+                    output = self.pid(self.current_temperature)
+                    if output > 0:
+                        rv = f'<peltier 0 {int(output):03}>'
+                    elif output < 0:
+                        rv = f'<peltier 1 {int(output):03}>'
+                    self.serial_device.write(b'%a\r\n' % rv)
+                print(f"step time: {time() - started_time}")
+        self.serial_device.write(b'<printTemps 0>')
+
         # Esse processo deve ser rodado em outra thread para evitar a parada
         # do mainloop da janela principal.
-        for cmd in self.experiment:
-            self.serial_device.write(cmd)
+        # for cmd in self.experiment:
+        #     self.serial_device.write(cmd)
 
     def serial_monitor(self):
         """Função para monitoramento da porta serial do Arduino.
@@ -140,12 +123,14 @@ class ArduinoPCR:
 
         while self.is_connected:
             try:
-                self.reading = self.serial_device.readline()
-                self.reading = str(self.reading).replace(r'\r\n', '')
-                if 'nextpls' in self.reading:
-                    self.experiment.is_awaiting = True
-                if self.reading != "b''":
-                    print(f'(SM) {self.reading}')
+                self.reading = self.serial_device.readline().decode()
+                self.reading = self.reading.strip('\r\n')
+                if 'tempSample' in self.reading:
+                    self.current_temperature = float(self.reading.split(' '
+                                                                        '')[1])
+                elif self.reading != '' and 'tempLid' not in self.reading:
+                    print(f'(SM) {repr(self.reading)}')
+
             except serial.SerialException:
                 messagebox.showerror('Dispositivo desconectado',
                                      'Ocorreu um erro ao se comunicar com '
@@ -187,6 +172,9 @@ class ArduinoPCR:
                                                           ())
 
 
+experiments = []
+
+
 class StringDialog(simpledialog._QueryString):
     """Modificação do ícone da StringDialog original em
     tkinter.simpledialog"""
@@ -194,7 +182,7 @@ class StringDialog(simpledialog._QueryString):
     # Créditos ao TeamSpen210 do Reddit
     def body(self, master):
         super().body(master)
-        self.iconbitmap(std.window_icon)
+        self.iconbitmap(std.WINDOW_ICON)
 
 
 def ask_string(title, prompt, **kwargs):

@@ -29,6 +29,6 @@ setup(name='Cetus PCR',
       version='0.2',
       description='Interface para o Cetus PCR',
       executables=executables,
-      options={'build_exe': {'includes': ['tkinter', 'serial', 'matplotlib'],
+      options={'build_exe': {'includes': ['tkinter', 'serial'],
                              'include_files': ['assets/'],
                              'include_msvcr': True, }})
