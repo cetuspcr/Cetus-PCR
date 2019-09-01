@@ -20,18 +20,19 @@ class ExperimentPCR:
     classe StepPCR.
     """
 
-    def __init__(self, name, cycles=0, final_hold=0, *steps):
+    def __init__(self, name, n_cycles=0, final_hold=0, *steps):
         self.name = name
-        self.cycles = cycles
+        self.n_cycles = n_cycles
         self.final_hold = final_hold
         self.steps = list(steps)
+        self._update_estimated_time()
 
     def __str__(self):
         str_steps = ''
         for step in self.steps:
             str_steps += f'-{str(step)}\n'
         final_str = f'\nNome do Experimento: "{self.name}"\n' \
-            f'->Nº de ciclos: {self.cycles}\n' \
+            f'->Nº de ciclos: {self.n_cycles}\n' \
             f'->Temperatura Final: {self.final_hold}°C\n' \
             f'{str_steps}'
         return final_str
@@ -39,6 +40,13 @@ class ExperimentPCR:
     def add_step(self, name, temp, duration):
         new_step = StepPCR(name, temp, duration)
         self.steps.append(new_step)
+        self._update_estimated_time()
+
+    def _update_estimated_time(self):
+        self.estimated_time = 0
+        for step in self.steps:
+            self.estimated_time += int(step.duration)
+        self.estimated_time *= int(self.n_cycles)
 
 
 class StepPCR:
@@ -46,9 +54,6 @@ class StepPCR:
         self.name = name
         self.temperature = temp
         self.duration = duration
-
-    def __add__(self, other):
-        return self.duration + other.duration
 
     def __repr__(self):
         return f'StepPCR({self.name}, {self.temperature}, {self.duration})'
@@ -92,7 +97,10 @@ class ArduinoPCR:
         self.serial_device.write(b'<printTemps 1>')
         sleep(1)
         started_time = time()
-        for i in range(int(self.experiment.cycles)):
+        for step in self.experiment.steps:
+            self.elapsed_time += int(step.duration)
+        self.elapsed_time *= self.experiment.n_cycles
+        for i in range(int(self.experiment.n_cycles)):
             for step in self.experiment.steps:
                 print(f'step name: {step.name}')
                 set_point = int(step.temperature)
@@ -274,3 +282,14 @@ def validate_entry(new_text) -> bool:
 def c_to_pwm(celsius: int) -> int:
     pwm_signal = celsius  # TODO fórmula de conversão
     return pwm_signal
+
+
+def seconds_to_string(sec):
+    m, s = divmod(sec, 60)
+    h, m = divmod(m, 60)
+    if h > 0:
+        return f'{h}h {m}m {s}s'
+    elif m > 0:
+        return f'{m}m {s}s'
+    else:
+        return f'{s}s'

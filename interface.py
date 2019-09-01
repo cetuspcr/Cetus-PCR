@@ -16,6 +16,7 @@ colocação das bordas e organização dos widgets dentro da janela.
 Todos os métodos com prefixo "handle" remetem as funções de botões.
 """
 
+from datetime import timedelta
 import _thread as thread
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -122,7 +123,7 @@ class BaseWindow(tk.Tk):
                 configure(
                 image=self._frame.side_buttons['reconnect_icon'].icon1)
             cetus_device.waiting_update = False
-        self.after(400, self.check_if_is_connected)
+        self.after(1, self.check_if_is_connected)
 
 
 class CetusWindow(tk.Frame):
@@ -411,7 +412,8 @@ class ExperimentWindow(CetusWindow):
                               bg=std.TOP_BAR_COLOR,
                               text=self.experiment.name)
         self.title.place(rely=0,
-                         relx=0.1)
+                         x=80,
+                         y=10)
 
     def _widgets(self):
         self.entry_of_options = {}
@@ -543,7 +545,7 @@ class ExperimentWindow(CetusWindow):
 
     def open_experiment(self):
         self.entry_of_options['Nº de ciclos']. \
-            insert(0, self.experiment.cycles)
+            insert(0, self.experiment.n_cycles)
         self.entry_of_options['Temperatura Final']. \
             insert(0, self.experiment.final_hold)
 
@@ -555,7 +557,7 @@ class ExperimentWindow(CetusWindow):
         print(self.experiment)
 
     def handle_save_button(self):
-        self.experiment.cycles = self.entry_of_options['Nº de ciclos'].get()
+        self.experiment.n_cycles = self.entry_of_options['Nº de ciclos'].get()
         self.experiment.final_hold = \
             self.entry_of_options['Temperatura Final'].get()
         self.experiment.steps = []
@@ -591,6 +593,8 @@ class MonitorWindow(ExperimentWindow):
         fc.experiments = fc.open_pickle_file(std.EXP_PATH)
         super().__init__(master, exp_index)
         self.master = master
+        self.current_estimated_time = 0
+        cetus_device.elapsed_time = 0
 
     def _widgets(self):
         self.data = {}
@@ -606,7 +610,7 @@ class MonitorWindow(ExperimentWindow):
                              rely=0.2,
                              x=gapx)
             new_value1 = tk.Label(master=self,
-                                  font=(std.FONT_TITLE, 50, 'bold'),
+                                  font=(std.FONT_TITLE, 40, 'bold'),
                                   bg=std.BG,
                                   fg=std.TEXTS_COLOR)
             new_value1.place(in_=new_label1,
@@ -627,7 +631,7 @@ class MonitorWindow(ExperimentWindow):
                              anchor='n',
                              y=gapy)
             new_value2 = tk.Label(master=self.master,
-                                  font=(std.FONT_TITLE, 50, 'bold'),
+                                  font=(std.FONT_TITLE, 40, 'bold'),
                                   bg=std.BG,
                                   fg=std.TEXTS_COLOR)
             new_value2.place(in_=new_label2,
@@ -664,16 +668,24 @@ class MonitorWindow(ExperimentWindow):
         self.update_labels()
 
     def update_labels(self):
+        self.current_estimated_time = self.experiment.estimated_time - \
+                                      cetus_device.elapsed_time
+        # self.data['Temperatura Amostra']. \
+        #     configure(text=f'{cetus_device.current_sample_temperature}°C')
+        # self.data['Temperatura Tampa']. \
+        #     configure(text=f'{cetus_device.current_lid_temperature}°C')
         self.data['Temperatura Amostra']. \
-            configure(text=cetus_device.current_sample_temperature)
+            configure(text=f'65°C')
         self.data['Temperatura Tampa']. \
-            configure(text=cetus_device.current_lid_temperature)
+            configure(text=f'97°C')
         self.data['Tempo Est. Restante']. \
-            configure(text='')
+            configure(text=fc.seconds_to_string(self.current_estimated_time))
         self.data['Tempo Decorrido']. \
-            configure(text=cetus_device.elapsed_time)
-        self.after(250, self.update_labels)
+            configure(text=fc.seconds_to_string(cetus_device.elapsed_time))
+        self.after(50, self.update_labels)
 
     def handle_cancel_button(self):
         cetus_device.is_running = False
+        cetus_device.elapsed_time = 0
+        self.current_estimated_time = 0
         self.master.switch_frame(ExperimentWindow, self.exp_index)
