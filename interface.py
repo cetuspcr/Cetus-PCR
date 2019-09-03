@@ -16,7 +16,6 @@ colocação das bordas e organização dos widgets dentro da janela.
 Todos os métodos com prefixo "handle" remetem as funções de botões.
 """
 
-from datetime import timedelta
 import _thread as thread
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -81,7 +80,7 @@ class BaseWindow(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
         self._frame = None
-        self.geometry('1000x660+200+10')
+        self.geometry('1050x660+200+10')
         self.resizable(False, False)
 
         self.switch_frame(CetusWindow)
@@ -123,7 +122,7 @@ class BaseWindow(tk.Tk):
                 configure(
                 image=self._frame.side_buttons['reconnect_icon'].icon1)
             cetus_device.waiting_update = False
-        self.after(1, self.check_if_is_connected)
+        self.after(250, self.check_if_is_connected)
 
 
 class CetusWindow(tk.Frame):
@@ -303,9 +302,10 @@ class CetusWindow(tk.Frame):
         self.master.index_exp = None
         self.master.switch_frame(CetusWindow)
 
-    # Ainda não implementado.
-    def handle_info_button(self):
-        pass
+    @staticmethod
+    def handle_info_button():
+        if not InfoWindow.is_open:
+            InfoWindow(tk.Tk())
 
     # Ainda não implementado.
     def handle_cooling_button(self):
@@ -556,7 +556,7 @@ class ExperimentWindow(CetusWindow):
                 insert(0, step.duration)
         print(self.experiment)
 
-    def handle_save_button(self):
+    def save_experiment(self):
         self.experiment.n_cycles = self.entry_of_options['Nº de ciclos'].get()
         self.experiment.final_hold = \
             self.entry_of_options['Temperatura Final'].get()
@@ -570,12 +570,17 @@ class ExperimentWindow(CetusWindow):
 
         fc.save_pickle_file(std.EXP_PATH, fc.experiments)
 
+    def handle_save_button(self):
+        self.save_experiment()
+        messagebox.showinfo('Cetus PCR', 'Experimento salvo :)', parent=self)
+
     def handle_back_button(self):
         self.master.index_exp = None
         self.master.switch_frame(CetusWindow)
 
     def handle_run_button(self):
         if cetus_device.is_connected:
+            self.save_experiment()
             cetus_device.is_running = True
             self.master.experiment_thread = \
                 thread.start_new_thread(cetus_device.run_experiment, ())
@@ -588,7 +593,6 @@ class ExperimentWindow(CetusWindow):
 
 
 class MonitorWindow(ExperimentWindow):
-
     def __init__(self, master: BaseWindow, exp_index):
         fc.experiments = fc.open_pickle_file(std.EXP_PATH)
         super().__init__(master, exp_index)
@@ -599,18 +603,19 @@ class MonitorWindow(ExperimentWindow):
     def _widgets(self):
         self.data = {}
         gapx, gapy = 0, 0
-        for label1, label2 in ('Temperatura Amostra', 'Temperatura Tampa'), \
-                              ('Tempo Est. Restante', 'Tempo Decorrido'):
+        line1 = ['Temperatura Amostra', 'Tempo Est. Restante', 'Ciclo Atual']
+        line2 = ['Temperatura Tampa', 'Tempo Decorrido', 'Passo Atual']
+        for label1, label2 in zip(line1, line2):
             new_label1 = tk.Label(master=self,
                                   text=label1,
                                   bg=std.BG,
                                   fg=std.TEXTS_COLOR,
-                                  font=(std.FONT_TITLE, 25, 'bold'))
+                                  font=(std.FONT_TITLE, 20, 'bold'))
             new_label1.place(relx=0.1,
                              rely=0.2,
                              x=gapx)
             new_value1 = tk.Label(master=self,
-                                  font=(std.FONT_TITLE, 40, 'bold'),
+                                  font=(std.FONT_TITLE, 30, 'bold'),
                                   bg=std.BG,
                                   fg=std.TEXTS_COLOR)
             new_value1.place(in_=new_label1,
@@ -618,20 +623,20 @@ class MonitorWindow(ExperimentWindow):
                              rely=1,
                              y=30,
                              relx=0.5)
-            self.data[label1] = new_value1
+            self.data[label1.lower()] = new_value1
 
             gapy += 200
             new_label2 = tk.Label(master=self,
                                   text=label2,
                                   bg=std.BG,
                                   fg=std.TEXTS_COLOR,
-                                  font=(std.FONT_TITLE, 25, 'bold'))
+                                  font=(std.FONT_TITLE, 20, 'bold'))
             new_label2.place(in_=new_label1,
                              relx=0.5,
                              anchor='n',
                              y=gapy)
             new_value2 = tk.Label(master=self.master,
-                                  font=(std.FONT_TITLE, 40, 'bold'),
+                                  font=(std.FONT_TITLE, 30, 'bold'),
                                   bg=std.BG,
                                   fg=std.TEXTS_COLOR)
             new_value2.place(in_=new_label2,
@@ -639,14 +644,14 @@ class MonitorWindow(ExperimentWindow):
                              rely=1,
                              y=30,
                              relx=0.5)
-            self.data[label2] = new_value2
-            gapx += 500
+            self.data[label2.lower()] = new_value2
+            gapx += 360
             gapy = 0
 
         self.frame1 = tk.Frame(master=self)
-        self.frame1.place(relx=0.8,
+        self.frame1.place(relx=0.9,
                           rely=0.8,
-                          x=-8,
+                          x=-30,
                           y=15,
                           anchor='center')
 
@@ -668,20 +673,22 @@ class MonitorWindow(ExperimentWindow):
         self.update_labels()
 
     def update_labels(self):
+        cur_cycle = f'{cetus_device.current_cycle}/{self.experiment.n_cycles}'
         self.current_estimated_time = self.experiment.estimated_time - \
                                       cetus_device.elapsed_time
-        # self.data['Temperatura Amostra']. \
-        #     configure(text=f'{cetus_device.current_sample_temperature}°C')
-        # self.data['Temperatura Tampa']. \
-        #     configure(text=f'{cetus_device.current_lid_temperature}°C')
-        self.data['Temperatura Amostra']. \
-            configure(text=f'65°C')
-        self.data['Temperatura Tampa']. \
-            configure(text=f'97°C')
-        self.data['Tempo Est. Restante']. \
+        self.data['temperatura amostra']. \
+            configure(text=f'{cetus_device.current_sample_temperature}°C')
+        self.data['temperatura tampa']. \
+            configure(text=f'{cetus_device.current_lid_temperature}°C')
+        self.data['tempo est. restante']. \
             configure(text=fc.seconds_to_string(self.current_estimated_time))
-        self.data['Tempo Decorrido']. \
+        self.data['tempo decorrido']. \
             configure(text=fc.seconds_to_string(cetus_device.elapsed_time))
+        self.data['passo atual']. \
+            configure(text=cetus_device.current_step,
+                      font=(std.FONT_TITLE, 21, 'bold'))
+        self.data['ciclo atual']. \
+            configure(text=cur_cycle)
         self.after(50, self.update_labels)
 
     def handle_cancel_button(self):
@@ -689,3 +696,35 @@ class MonitorWindow(ExperimentWindow):
         cetus_device.elapsed_time = 0
         self.current_estimated_time = 0
         self.master.switch_frame(ExperimentWindow, self.exp_index)
+
+
+class InfoWindow(tk.Frame):
+    is_open = False
+
+    def __init__(self, master: tk.Tk):
+        super().__init__(master)
+        self.master = master
+        self.master.title('Cetus PCR')
+        self.master.iconbitmap(std.WINDOW_ICON)
+        self.master.protocol('WM_DELETE_WINDOW', self.close_window)
+        InfoWindow.is_open = True
+
+        # Os dois primeiro valores ajustam o tamanho da janela, os dois
+        # últimos ajustam a posição
+        self.master.geometry('400x250+500+200')
+
+        self.master.resizable(False, False)
+
+        self.configure(bg=std.BG,
+                       bd=0,
+                       highlightcolor=std.BD,
+                       highlightbackground=std.BD,
+                       highlightthickness=std.BD_WIDTH)
+        self.pack(expand=1,
+                  fill='both')
+
+        # O mestre de todos os outros widgets deve ser o self.main_frame
+
+    def close_window(self):
+        InfoWindow.is_open = False
+        self.master.destroy()

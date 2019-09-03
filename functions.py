@@ -9,6 +9,8 @@ from simple_pid import PID
 
 import constants as std
 
+experiments = []
+
 
 class ExperimentPCR:
     """Um objeto que contêm todas as informações de temperatura e tempo dos
@@ -71,8 +73,8 @@ class ArduinoPCR:
         self.timeout = timeout
         self.baudrate = baudrate
         self.experiment: ExperimentPCR = experiment
-        self.pid = PID(Kp=1, Ki=0, Kd=0,
-                       output_limits=(-255, 255))
+        self.pid = PID(Kp=3, Ki=0, Kd=0,
+                       output_limits=(-255, 255), sample_time=0)
 
         # Conferir com o nome no Gerenciador de dispositivos do windows
         # caso esteja usando um arduino diferente.
@@ -85,8 +87,11 @@ class ArduinoPCR:
         self.monitor_thread = None
 
         self.is_running = False
+        self.is_waiting = True
         self.current_sample_temperature = 0
         self.current_lid_temperature = 0
+        self.current_step = ''
+        self.current_cycle = 0
         self.elapsed_time = 0
 
         self.reading = ''
@@ -94,40 +99,37 @@ class ArduinoPCR:
         self.initialize_connection()
 
     def run_experiment(self):
-        self.serial_device.write(b'<printTemps 1>')
         sleep(1)
         started_time = time()
         for step in self.experiment.steps:
             self.elapsed_time += int(step.duration)
         self.elapsed_time *= self.experiment.n_cycles
         for i in range(int(self.experiment.n_cycles)):
+            self.current_cycle = i + 1
             for step in self.experiment.steps:
-                print(f'step name: {step.name}')
+                self.current_step = step.name
                 set_point = int(step.temperature)
                 duration = int(step.duration)
                 started_step_time = time()
                 self.pid.setpoint = set_point
                 while time() - started_step_time <= duration:
-                    if self.is_running:
+                    if not self.is_running:
+                        print('Experiment Cancelled')
+                        messagebox.showinfo('Cetus PCR', 'O experimento foi '
+                                                         'cancelado.')
+                        self.serial_device.write(b'<printTemps 0>')
+                        return
+                    elif self.is_waiting:
                         output = self.pid(self.current_sample_temperature)
                         if output > 0:
                             rv = f'<peltier 0 {int(output):03}>'
                         elif output < 0:
-                            rv = f'<peltier 1 {int(output):03}>'
+                            rv = f'<peltier 1 {int(abs(output)):03}>'
                         self.serial_device.write(b'%a\r\n' % rv)
+                        self.is_waiting = False
                         self.elapsed_time = int(time() - started_time)
-                    else:
-                        print('cancelled')
-                        self.serial_device.write(b'<printTemps 0>')
-                        return
-                print(f"step time: {time() - started_step_time}")
         print(f'Finish time: {time() - started_time}')
         self.serial_device.write(b'<printTemps 0>')
-
-        # Esse processo deve ser rodado em outra thread para evitar a parada
-        # do mainloop da janela principal.
-        # for cmd in self.experiment:
-        #     self.serial_device.write(cmd)
 
     def serial_monitor(self):
         """Função para monitoramento da porta serial do Arduino.
@@ -151,8 +153,10 @@ class ArduinoPCR:
                 elif 'tempLid' in self.reading:
                     self.current_lid_temperature = \
                         float(self.reading.split()[1])
-                elif self.reading != '' and 'tempLid' not in self.reading:
-                    print(f'(SM) {repr(self.reading)}')
+                elif self.reading == 'nextpls':
+                    self.is_waiting = True
+                # if self.reading != '':
+                #     print(repr(f'(SM) {self.reading}'))
 
             except serial.SerialException:
                 messagebox.showerror('Dispositivo desconectado',
@@ -193,9 +197,6 @@ class ArduinoPCR:
         if self.is_connected:
             self.monitor_thread = thread.start_new_thread(self.serial_monitor,
                                                           ())
-
-
-experiments = []
 
 
 class StringDialog(simpledialog._QueryString):
@@ -276,12 +277,6 @@ def validate_entry(new_text) -> bool:
             return len(new_text) <= 3
     except ValueError:
         return False
-
-
-# Ainda não Finalizada.
-def c_to_pwm(celsius: int) -> int:
-    pwm_signal = celsius  # TODO fórmula de conversão
-    return pwm_signal
 
 
 def seconds_to_string(sec):
