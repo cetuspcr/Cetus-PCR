@@ -1,6 +1,6 @@
 import pickle
+from threading import Thread
 from time import sleep, time
-import _thread as thread
 from tkinter import simpledialog, messagebox
 
 import serial  # Listado como pyserial em requirements.txt
@@ -91,6 +91,7 @@ class ArduinoPCR:
         self.current_sample_temperature = 0
         self.current_lid_temperature = 0
         self.current_step = ''
+        self.current_step_temp = 0
         self.current_cycle = 0
         self.elapsed_time = 0
 
@@ -104,14 +105,18 @@ class ArduinoPCR:
         for step in self.experiment.steps:
             self.elapsed_time += int(step.duration)
         self.elapsed_time *= self.experiment.n_cycles
+
         for i in range(int(self.experiment.n_cycles)):
             self.current_cycle = i + 1
             for step in self.experiment.steps:
+                started_step_time = time()
+
                 self.current_step = step.name
+                self.current_step_temp = step.temperature
                 set_point = int(step.temperature)
                 duration = int(step.duration)
-                started_step_time = time()
                 self.pid.setpoint = set_point
+
                 while time() - started_step_time <= duration:
                     if not self.is_running:
                         print('Experiment Cancelled')
@@ -122,12 +127,16 @@ class ArduinoPCR:
                     elif self.is_waiting:
                         output = self.pid(self.current_sample_temperature)
                         if output > 0:
-                            rv = f'<peltier 0 {int(output):03}>'
+                            # Surgiu a necessidade de inverter o valor que
+                            # era mandado para o arduino, por conta da ponte H
+                            # funcionar com uma lógica invertida
+                            rv = f'<peltier 0 {~int(output) + 256:03}>'
                         elif output < 0:
-                            rv = f'<peltier 1 {int(abs(output)):03}>'
+                            rv = f'<peltier 1 {~int(abs(output)) + 256:03}>'
                         self.serial_device.write(b'%a\r\n' % rv)
                         self.is_waiting = False
                         self.elapsed_time = int(time() - started_time)
+
         print(f'Finish time: {time() - started_time}')
         self.serial_device.write(b'<printTemps 0>')
 
@@ -150,13 +159,13 @@ class ArduinoPCR:
                 if 'tempSample' in self.reading:
                     self.current_sample_temperature = \
                         float(self.reading.split()[1])
-                elif 'tempLid' in self.reading:
+                if 'tempLid' in self.reading:
                     self.current_lid_temperature = \
                         float(self.reading.split()[1])
                 elif self.reading == 'nextpls':
                     self.is_waiting = True
-                # if self.reading != '':
-                #     print(repr(f'(SM) {self.reading}'))
+                if self.reading != '':
+                    print(repr(f'(SM) {self.reading}'))
 
             except serial.SerialException:
                 messagebox.showerror('Dispositivo desconectado',
@@ -165,6 +174,7 @@ class ArduinoPCR:
                                      'reinicie o aplicativo.')
                 self.is_connected = False
                 self.waiting_update = True
+                self.is_running = False
                 std.hover_text = 'Cetus PCR desconectado.'
         return  # Return para encerrar a thread
 
@@ -195,8 +205,8 @@ class ArduinoPCR:
             print('Connection Failed')
 
         if self.is_connected:
-            self.monitor_thread = thread.start_new_thread(self.serial_monitor,
-                                                          ())
+            self.monitor_thread = Thread(target=self.serial_monitor)
+            self.monitor_thread.start()
 
 
 class StringDialog(simpledialog._QueryString):

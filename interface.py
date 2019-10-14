@@ -16,21 +16,18 @@ colocação das bordas e organização dos widgets dentro da janela.
 Todos os métodos com prefixo "handle" remetem as funções de botões.
 """
 
-import _thread as thread
 import tkinter as tk
+from threading import Thread
 from tkinter import ttk, messagebox
-
-# import matplotlib.pyplot as plt
-# from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-# from matplotlib.animation import FuncAnimation
 
 import constants as std
 import functions as fc
 
-cetus_device = fc.ArduinoPCR(baudrate=9600, timeout=0.1)
+
+arduino = fc.ArduinoPCR(baudrate=9600, timeout=1)
 
 
-class MyButton(tk.Button):
+class AnimatedButton(tk.Button):
     """Botão modificado para alternar entre 2 ícones.
 
     O caminho dos ícones é fornecido ao método __init__, após isso os 2
@@ -70,6 +67,137 @@ class MyButton(tk.Button):
                 text=std.hover_texts['default'])
 
 
+class ScrollFrame(tk.Frame):
+    """Um frame customizado com uma barra de rolagem vertical.
+
+    Créditos ao mp035 no GitHub Gist.
+    """
+
+    def __init__(self, master, **kw):
+        super().__init__(master, **kw)  # create a frame (self)
+
+        self.canvas = tk.Canvas(self,
+                                borderwidth=0,
+                                height=450,
+                                width=350,
+                                **kw)
+        self.viewPort = tk.Frame(self.canvas, **kw)
+        self.vsb = tk.Scrollbar(self, orient="vertical",
+                                command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.vsb.set)
+
+        self.vsb.pack(side="right",
+                      fill="y")
+        self.canvas.pack(side="left", fill="both",
+                         expand=True)
+        self.canvas.create_window((10, 4), window=self.viewPort, anchor="nw",
+                                  # add view port frame to canvas
+                                  tags="self.viewPort")
+
+        # bind an event whenever the size of the viewPort frame changes.
+        self.viewPort.bind("<Configure>", self.on_frame_configure)
+        self.update_scroll_bar()
+
+    def on_frame_configure(self, event):
+        """Reset the scroll region to encompass the inner frame"""
+        # whenever the size of the frame changes, alter the scroll region.
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    def update_scroll_bar(self):
+        if StepWidget.n_steps < 5:
+            self.vsb.forget()
+        else:
+            self.vsb.pack(side="right",
+                          fill="y")
+
+
+class StepWidget(tk.Frame):
+    """Um frame padrão para adicionar informações aos experimentos. """
+
+    n_steps = 0
+
+    def __init__(self, master, step_name, **kw):
+        tk.Frame.__init__(self, master=master, **kw)
+        self.configure(width=250, height=100, bg=std.BG)
+        self.vcmd = self.master.register(fc.validate_entry)
+        self.master = master
+
+        self.step_name = step_name
+        self.label_name = tk.Label(master=self,
+                                   font=(std.FONT_ENTRY_TITLE, 20, 'bold'),
+                                   text=f'{self.step_name}:',
+                                   bg=std.BG,
+                                   fg=std.TEXTS_COLOR)
+        self.label_name.pack(side='top', anchor='nw')
+        self.entry_temp = tk.Entry(master=self,
+                                   font=(std.FONT_ENTRY, 30),
+                                   width=3,
+                                   bd=1,
+                                   highlightcolor=std.BD,
+                                   highlightthickness=std.BD_WIDTH,
+                                   validate='key',
+                                   validatecommand=(self.vcmd, '%P'))
+        self.entry_temp.pack(side='left',
+                             pady=10)
+        tk.Label(master=self,
+                 font=(std.FONT_ENTRY_TITLE, 14, 'bold'),
+                 text='°C',
+                 bg=std.BG,
+                 fg=std.TEXTS_COLOR).place(in_=self.entry_temp,
+                                           relx=1,
+                                           rely=0,
+                                           x=10)
+
+        self.entry_time = tk.Entry(master=self,
+                                   font=(std.FONT_ENTRY, 30),
+                                   width=3,
+                                   bd=1,
+                                   highlightcolor=std.BD,
+                                   highlightthickness=std.BD_WIDTH,
+                                   validate='key',
+                                   validatecommand=(self.vcmd, '%P'))
+        self.entry_time.pack(side='left',
+                             padx=50,
+                             pady=10)
+        tk.Label(master=self,
+                 font=(std.FONT_ENTRY_TITLE, 14, 'bold'),
+                 text='Seg',
+                 bg=std.BG,
+                 fg=std.TEXTS_COLOR).place(in_=self.entry_time,
+                                           relx=1,
+                                           rely=0,
+                                           x=10)
+
+        self.remove_image = tk.PhotoImage(file='assets/remove_icon.png')
+        self.remove_button = tk.Button(master=self,
+                                       image=self.remove_image,
+                                       command=self.remove_widget_step,
+                                       bg=std.BG,
+                                       relief=std.RELIEF,
+                                       bd=0,
+                                       highlightthickness=0,
+                                       activebackground=std.BG)
+        self.remove_button.pack(side='left', padx=15)
+        StepWidget.n_steps += 1
+
+    def get_step(self):
+        return fc.StepPCR(self.step_name, self.entry_temp.get(),
+                          self.entry_time.get())
+
+    def remove_widget_step(self):
+        self.master.master.master.master.step_widgets_data.remove(self)
+        StepWidget.n_steps -= 1
+        self.forget()
+        self.master.master.master.update_scroll_bar()
+
+    @classmethod
+    def create_from_step_class(cls, master, step: fc.StepPCR):
+        new_widget = cls(master=master, step_name=step.name)
+        new_widget.entry_temp.insert(0, step.temperature)
+        new_widget.entry_time.insert(0, step.duration)
+        return new_widget
+
+
 class BaseWindow(tk.Tk):
     """Janela que exibe os widgets ativos de acordo com a classe dada.
 
@@ -88,19 +216,14 @@ class BaseWindow(tk.Tk):
         self.check_if_is_connected()
         self.experiment_thread = None
 
-    def switch_frame(self, new_frame, index_exp=None):
+    def switch_frame(self, new_frame, *args, **kwargs):
         """Função para trocar o conteúdo exibido pela na janela.
 
         :param new_frame: nova classe ou subclasse da tk.Frame a ser
         exibida.
-        :param index_exp: existem janelas que lidam com um experimento
-        específico, nesse caso o endereço do mesmo deve ser fornecido.
         """
 
-        if index_exp is not None:
-            new_frame = new_frame(self, index_exp)
-        else:
-            new_frame = new_frame(self)
+        new_frame = new_frame(self, *args, **kwargs)
         if self._frame is not None:
             self._frame.destroy()
         self._frame = new_frame
@@ -113,16 +236,19 @@ class BaseWindow(tk.Tk):
         Essa função roda em looping infinito no background da janela
         base.
         """
-        if self._frame is not None:
-            if cetus_device.is_connected:
-                self._frame.side_buttons['reconnect_icon']. \
-                    configure(image=self.connected_icon)
-        if cetus_device.waiting_update:
-            self._frame.side_buttons['reconnect_icon']. \
-                configure(
-                image=self._frame.side_buttons['reconnect_icon'].icon1)
-            cetus_device.waiting_update = False
-        self.after(250, self.check_if_is_connected)
+        bt_connected = self._frame.side_buttons['reconnect_icon']
+        if self._frame is not None and arduino.is_connected:
+            bt_connected.icon1 = self.connected_icon
+            bt_connected.icon2 = self.connected_icon
+            bt_connected.configure(image=self.connected_icon)
+        elif arduino.waiting_update:
+            bt_connected.icon1 = tk.PhotoImage(
+                file=std.side_buttons_path['reconnect_icon'])
+            bt_connected.icon2 = tk.PhotoImage(
+                file=std.side_buttons_path['reconnect_highlight'])
+            bt_connected.configure(image=bt_connected.icon1)
+            arduino.waiting_update = False
+        self.after(1000, self.check_if_is_connected)
 
 
 class CetusWindow(tk.Frame):
@@ -191,15 +317,15 @@ class CetusWindow(tk.Frame):
                 self.b_name = self.path_slice[0]
                 self.path1 = std.side_buttons_path[but]
                 self.path2 = std.side_buttons_path[f'{self.b_name}_highlight']
-                self.new_button = MyButton(master=self.side_bar_frame,
-                                           image1=self.path1,
-                                           image2=self.path2,
-                                           width=self.side_bar_width + 10,
-                                           activebackground=std.SIDE_BAR_COLOR,
-                                           bd=0,
-                                           bg=std.SIDE_BAR_COLOR,
-                                           hover_text=std.hover_texts[
-                                               self.b_name])
+                self.new_button = AnimatedButton(master=self.side_bar_frame,
+                                                 image1=self.path1,
+                                                 image2=self.path2,
+                                                 width=self.side_bar_width + 10,
+                                                 activebackground=std.SIDE_BAR_COLOR,
+                                                 bd=0,
+                                                 bg=std.SIDE_BAR_COLOR,
+                                                 hover_text=std.hover_texts[
+                                                     self.b_name])
 
                 self.side_buttons[but] = self.new_button
                 if but != 'home_icon':
@@ -210,8 +336,8 @@ class CetusWindow(tk.Frame):
             configure(command=self.handle_home_button)
         self.side_buttons['info_icon']. \
             configure(command=self.handle_info_button)
-        self.side_buttons['cooling_icon']. \
-            configure(command=self.handle_cooling_button)
+        # self.side_buttons['cooling_icon']. \
+        #     configure(command=self.handle_cooling_button)
         self.side_buttons['reconnect_icon']. \
             configure(command=self.handle_reconnect_button)
         self.side_buttons['settings_icon']. \
@@ -247,16 +373,16 @@ class CetusWindow(tk.Frame):
                 self.path1 = std.cetuspcr_buttons_path[but]
                 self.path2 = std.cetuspcr_buttons_path[
                     f'{self.path_slice[0]}_highlight']
-                self.new_button = MyButton(master=self.buttons_frame,
-                                           image1=self.path1,
-                                           image2=self.path2,
-                                           activebackground=std.BG,
-                                           width=75,
-                                           bd=0,
-                                           bg=std.BG,
-                                           highlightthickness=0,
-                                           hover_text=std.hover_texts[
-                                               self.b_name])
+                self.new_button = AnimatedButton(master=self.buttons_frame,
+                                                 image1=self.path1,
+                                                 image2=self.path2,
+                                                 activebackground=std.BG,
+                                                 width=75,
+                                                 bd=0,
+                                                 bg=std.BG,
+                                                 highlightthickness=0,
+                                                 hover_text=std.hover_texts[
+                                                     self.b_name])
 
                 self.buttons[but] = self.new_button
                 self.buttons[but].pack(side='right', padx=8)
@@ -313,10 +439,10 @@ class CetusWindow(tk.Frame):
 
     @staticmethod
     def handle_reconnect_button():
-        if not cetus_device.is_connected:
-            cetus_device.initialize_connection()
-            port = cetus_device.port_connected
-            if cetus_device.is_connected:
+        if not arduino.is_connected:
+            arduino.initialize_connection()
+            port = arduino.port_connected
+            if arduino.is_connected:
                 messagebox.showinfo('Cetus PCR',
                                     'Dispositivo conectado com sucesso na '
                                     f'porta "{port}"')
@@ -326,7 +452,7 @@ class CetusWindow(tk.Frame):
         else:
             messagebox.showinfo('Cetus PCR',
                                 'O Dispositivo já está conectado '
-                                f'({cetus_device.port_connected}).')
+                                f'({arduino.port_connected}).')
 
     # Ainda não implementado.
     def handle_settings_button(self):
@@ -377,9 +503,9 @@ class CetusWindow(tk.Frame):
         destrói a janela principal encerrando o programa.
         """
         fc.save_pickle_file(std.EXP_PATH, fc.experiments)
-        if cetus_device.is_connected:
-            cetus_device.is_connected = False
-            cetus_device.serial_device.close()
+        if arduino.is_connected:
+            arduino.is_connected = False
+            arduino.serial_device.close()
             print('Closing serial port.')
         self.master.destroy()
 
@@ -401,11 +527,11 @@ class ExperimentWindow(CetusWindow):
         super().__init__(master)
         self.exp_index = exp_index
         self.master = master
-        self.experiment: fc.ExperimentPCR = fc.experiments[exp_index]
         self.vcmd = self.master.register(fc.validate_entry)
-        cetus_device.experiment = self.experiment
+        self.experiment: fc.ExperimentPCR = fc.experiments[exp_index]
+        arduino.experiment = self.experiment
         self.logo_bg.place_forget()
-
+        self.step_widgets_data = []
         self.title = tk.Label(master=self,
                               font=(std.FONT_TITLE, 39, 'bold'),
                               fg=std.TEXTS_COLOR,
@@ -417,51 +543,7 @@ class ExperimentWindow(CetusWindow):
 
     def _widgets(self):
         self.entry_of_options = {}
-        self.gapy = 20
-        for stage in ('Desnaturação', 'Anelamento', 'Extensão'):
-            self.gapx = 20
-            for option in ('Temperatura', 'Tempo'):
-                entry = tk.Entry(master=self,
-                                 font=(std.FONT_ENTRY, 30),
-                                 width=3,
-                                 bd=1,
-                                 highlightcolor=std.BD,
-                                 highlightthickness=std.BD_WIDTH,
-                                 validate='key',
-                                 validatecommand=(self.vcmd, '%P'))
-                key = f'{stage} {option}'
-                self.entry_of_options[key] = entry
-                entry.place(relx=0.2,
-                            rely=0.2,
-                            x=self.gapx,
-                            y=self.gapy,
-                            anchor='ne')
-                self.gapx += 150
-                if option == 'Temperatura':
-                    text = '°C'
-                else:
-                    text = 'Seg'
-                unit_label = tk.Label(master=self,
-                                      text=text,
-                                      fg=std.TEXTS_COLOR,
-                                      bg=std.BG,
-                                      font=(std.FONT_ENTRY_TITLE, 14, 'bold'))
-                unit_label.place(in_=entry,
-                                 relx=1,
-                                 rely=0,
-                                 x=10)
-            self.gapy += 120
-            label = tk.Label(master=self,
-                             font=(std.FONT_ENTRY_TITLE, 20, 'bold'),
-                             text=f'{stage}:',
-                             bg=std.BG,
-                             fg=std.TEXTS_COLOR)
-            label.place(in_=self.entry_of_options[f'{stage} Temperatura'],
-                        anchor='sw',
-                        y=-10,
-                        bordermode='outside')
-
-        self.gapy = 20
+        self.gapy = 50
 
         for option in ('Nº de ciclos', 'Temperatura Final'):
             key = option
@@ -499,9 +581,21 @@ class ExperimentWindow(CetusWindow):
                                  relx=1,
                                  rely=0,
                                  x=10)
+        self.frame_steps = ScrollFrame(master=self,
+                                       bg=std.BG,
+                                       bd=0,
+                                       highlightthickness=0)
+        self.frame_steps.place(relx=0.1,
+                               rely=0.2,
+                               x=50)
+        for step in ('Desnaturação', 'Anelamento', 'Extensão'):
+            self.new_step = StepWidget(master=self.frame_steps.viewPort,
+                                       step_name=step)
+            self.new_step.pack(side='top')
+            self.step_widgets_data.append(self.new_step)
 
         self.buttons_frame = tk.Frame(master=self,
-                                      width=230,
+                                      width=340,
                                       height=120,
                                       bg=std.BG,
                                       bd=0,
@@ -509,12 +603,13 @@ class ExperimentWindow(CetusWindow):
                                       highlightcolor=std.BD,
                                       highlightbackground=std.BD,
                                       highlightthickness=std.BD_WIDTH)
-        self.buttons_frame.place(in_=self.
-                                 entry_of_options['Temperatura Final'],
+        self.buttons_frame.place(in_=self.entry_of_options['Temperatura '
+                                                           'Final'],
                                  anchor='n',
                                  relx=0.5,
                                  rely=1,
                                  y=50)
+
         self.buttons_frame.pack_propagate(False)
         self.buttons = {}
         for but in std.experimentpcr_buttons_path:
@@ -524,22 +619,24 @@ class ExperimentWindow(CetusWindow):
                 self.path1 = std.experimentpcr_buttons_path[but]
                 self.path2 = std.experimentpcr_buttons_path[
                     f'{self.path_slice[0]}_highlight']
-                self.new_button = MyButton(master=self.buttons_frame,
-                                           image1=self.path1,
-                                           image2=self.path2,
-                                           activebackground=std.BG,
-                                           width=75,
-                                           bd=0,
-                                           bg=std.BG,
-                                           highlightthickness=0,
-                                           hover_text=std.hover_texts[
-                                               self.b_name])
+                self.new_button = AnimatedButton(master=self.buttons_frame,
+                                                 image1=self.path1,
+                                                 image2=self.path2,
+                                                 activebackground=std.BG,
+                                                 width=75,
+                                                 bd=0,
+                                                 bg=std.BG,
+                                                 highlightthickness=0,
+                                                 hover_text=std.hover_texts[
+                                                     self.b_name])
 
                 self.buttons[but] = self.new_button
                 self.buttons[but].pack(side='left',
                                        padx=17)
+
         self.buttons['save_icon'].configure(command=self.handle_save_button)
         self.buttons['run_icon'].configure(command=self.handle_run_button)
+        self.buttons['add_icon'].configure(command=self.handle_add_button)
         if len(self.experiment.steps) > 0:
             self.open_experiment()
 
@@ -548,27 +645,41 @@ class ExperimentWindow(CetusWindow):
             insert(0, self.experiment.n_cycles)
         self.entry_of_options['Temperatura Final']. \
             insert(0, self.experiment.final_hold)
-
+        for widget in self.step_widgets_data:
+            widget.forget()
+        self.step_widgets_data.clear()
         for step in self.experiment.steps:
-            self.entry_of_options[f'{step.name} Temperatura']. \
-                insert(0, step.temperature)
-            self.entry_of_options[f'{step.name} Tempo']. \
-                insert(0, step.duration)
-        print(self.experiment)
+            new = StepWidget.create_from_step_class(master=self.frame_steps.
+                                                    viewPort,
+                                                    step=step)
+            new.pack(side='top')
+            self.step_widgets_data.append(new)
+        StepWidget.n_steps = len(self.step_widgets_data)
+        self.frame_steps.update_scroll_bar()
 
     def save_experiment(self):
         self.experiment.n_cycles = self.entry_of_options['Nº de ciclos'].get()
         self.experiment.final_hold = \
             self.entry_of_options['Temperatura Final'].get()
-        self.experiment.steps = []
-        for step in ('Desnaturação', 'Anelamento', 'Extensão'):
-            self.experiment.add_step(step,
-                                     self.entry_of_options[
-                                         f'{step} Temperatura'].get(),
-                                     self.entry_of_options[
-                                         f'{step} Tempo'].get())
-
+        self.experiment.steps.clear()
+        for widget in self.step_widgets_data:
+            self.experiment.steps.append(widget.get_step())
         fc.save_pickle_file(std.EXP_PATH, fc.experiments)
+        print(self.experiment)
+
+    def handle_add_button(self):
+        step_name = fc.ask_string('Nova Etapa', 'Digite o nome do novo '
+                                                'passo:')
+        if step_name == '':
+            messagebox.showerror('Nova Etapa', 'O nome da etapa não pode '
+                                               'estar vazio')
+        elif step_name is not None:
+            new_step = StepWidget(master=self.frame_steps.viewPort,
+                                  step_name=step_name)
+            self.step_widgets_data.append(new_step)
+            self.frame_steps.update_scroll_bar()
+            new_step.label_name.configure(text=step_name + ':')
+            new_step.pack()
 
     def handle_save_button(self):
         self.save_experiment()
@@ -579,11 +690,11 @@ class ExperimentWindow(CetusWindow):
         self.master.switch_frame(CetusWindow)
 
     def handle_run_button(self):
-        if cetus_device.is_connected:
+        if arduino.is_connected:
             self.save_experiment()
-            cetus_device.is_running = True
-            self.master.experiment_thread = \
-                thread.start_new_thread(cetus_device.run_experiment, ())
+            arduino.is_running = True
+            self.master.experiment_thread = Thread(target=arduino.run_experiment)
+            self.master.experiment_thread.start()
             self.master.switch_frame(MonitorWindow, self.exp_index)
 
         else:
@@ -598,12 +709,12 @@ class MonitorWindow(ExperimentWindow):
         super().__init__(master, exp_index)
         self.master = master
         self.current_estimated_time = 0
-        cetus_device.elapsed_time = 0
+        arduino.elapsed_time = 0
 
     def _widgets(self):
         self.data = {}
         gapx, gapy = 0, 0
-        line1 = ['Temperatura Amostra', 'Tempo Est. Restante', 'Ciclo Atual']
+        line1 = ['Temperatura Amostra', 'Temperatura Alvo', 'Ciclo Atual']
         line2 = ['Temperatura Tampa', 'Tempo Decorrido', 'Passo Atual']
         for label1, label2 in zip(line1, line2):
             new_label1 = tk.Label(master=self,
@@ -655,45 +766,44 @@ class MonitorWindow(ExperimentWindow):
                           y=15,
                           anchor='center')
 
-        self.cancel_button = MyButton(master=self.frame1,
-                                      relief=std.RELIEF,
-                                      command=self.handle_cancel_button,
-                                      image1=std.cetuspcr_buttons_path[
-                                          'delete_icon'],
-                                      image2=std.cetuspcr_buttons_path[
-                                          'delete_highlight'],
-                                      hover_text=std.hover_texts['cancel'],
-                                      activebackground=std.BG,
-                                      width=75,
-                                      bd=0,
-                                      bg=std.BG,
-                                      highlightthickness=0)
+        self.cancel_button = AnimatedButton(master=self.frame1,
+                                            relief=std.RELIEF,
+                                            command=self.handle_cancel_button,
+                                            image1=std.cetuspcr_buttons_path[
+                                                'delete_icon'],
+                                            image2=std.cetuspcr_buttons_path[
+                                                'delete_highlight'],
+                                            hover_text=std.hover_texts[
+                                                'cancel'],
+                                            activebackground=std.BG,
+                                            width=75,
+                                            bd=0,
+                                            bg=std.BG,
+                                            highlightthickness=0)
 
         self.cancel_button.pack()
         self.update_labels()
 
     def update_labels(self):
-        cur_cycle = f'{cetus_device.current_cycle}/{self.experiment.n_cycles}'
-        self.current_estimated_time = self.experiment.estimated_time - \
-                                      cetus_device.elapsed_time
+        cur_cycle = f'{arduino.current_cycle}/{self.experiment.n_cycles}'
         self.data['temperatura amostra']. \
-            configure(text=f'{cetus_device.current_sample_temperature}°C')
+            configure(text=f'{arduino.current_sample_temperature}°C')
         self.data['temperatura tampa']. \
-            configure(text=f'{cetus_device.current_lid_temperature}°C')
-        self.data['tempo est. restante']. \
-            configure(text=fc.seconds_to_string(self.current_estimated_time))
+            configure(text=f'{arduino.current_lid_temperature}°C')
+        self.data['temperatura alvo']. \
+            configure(text=f'{arduino.current_step_temp}°C')
         self.data['tempo decorrido']. \
-            configure(text=fc.seconds_to_string(cetus_device.elapsed_time))
+            configure(text=fc.seconds_to_string(arduino.elapsed_time))
         self.data['passo atual']. \
-            configure(text=cetus_device.current_step,
+            configure(text=arduino.current_step,
                       font=(std.FONT_TITLE, 21, 'bold'))
         self.data['ciclo atual']. \
             configure(text=cur_cycle)
         self.after(50, self.update_labels)
 
     def handle_cancel_button(self):
-        cetus_device.is_running = False
-        cetus_device.elapsed_time = 0
+        arduino.is_running = False
+        arduino.elapsed_time = 0
         self.current_estimated_time = 0
         self.master.switch_frame(ExperimentWindow, self.exp_index)
 

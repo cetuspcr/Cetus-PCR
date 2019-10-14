@@ -5,7 +5,6 @@ BD_WIDTH = 3
 RELIEF = 'flat'
 TEXTS_COLOR = 'white'
 SIDE_BAR_COLOR = '#383838'
-# top_bar_color = '#3f9b6b'
 TOP_BAR_COLOR = '#529E76'
 HEADER_IMAGE_PATH = 'assets/header_cetus.png'
 LOGO_IMAGE_PATH = 'assets/logo.png'
@@ -22,7 +21,7 @@ WINDOW_ICON = 'assets/cetus.ico'
 side_buttons_path = {'home_icon': 'assets/home_icon.png',
                      'settings_icon': 'assets/settings_icon.png',
                      'reconnect_icon': 'assets/reconnect_icon.png',
-                     'cooling_icon': 'assets/cooling_icon.png',
+                     # 'cooling_icon': 'assets/cooling_icon.png',
                      'info_icon': 'assets/info_icon.png',
                      'home_highlight': 'assets/home_highlight.png',
                      'settings_highlight': 'assets/settings_highlight.png',
@@ -35,10 +34,13 @@ cetuspcr_buttons_path = {'add_icon': 'assets/add_icon.png',
                          'add_highlight': 'assets/add_highlight.png',
                          'delete_highlight': 'assets/delete_highlight.png',
                          'confirm_highlight': 'assets/confirm_highlight.png'}
-experimentpcr_buttons_path = {'save_icon': 'assets/save_icon.png',
+experimentpcr_buttons_path = {'add_icon': 'assets/add_icon.png',
+                              'save_icon': 'assets/save_icon.png',
                               'run_icon': 'assets/run_icon.png',
+                              'add_highlight': 'assets/add_highlight.png',
                               'save_highlight': 'assets/save_highlight.png',
                               'run_highlight': 'assets/run_highlight.png'}
+remove_button_path = 'assets/remove_icon.png'
 
 hover_texts = {
     'default': 'Feito com ♥ na ETEC PV pelo 3º Mecatrônica(2k19).',
