@@ -1,11 +1,22 @@
-#include "serialtools.h"
+// #include "serialtools.h"
+
+// void setup(){
+//     Serial.begin(9600);
+//     startup();
+// }
+
+// void loop(){
+//     recieveCommand();
+//     splitData();
+// }
+
 
 void setup(){
-    Serial.begin(9600);
-    startup();
+    pinMode(5, OUTPUT);
+    pinMode(6, OUTPUT);
 }
 
 void loop(){
-    recieveCommand();
-    splitData();
+    digitalWrite(5, HIGH);
+    digitalWrite(6, LOW);
 }

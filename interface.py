@@ -23,7 +23,6 @@ from tkinter import ttk, messagebox
 import constants as std
 import functions as fc
 
-
 arduino = fc.ArduinoPCR(baudrate=9600, timeout=1)
 
 
@@ -56,14 +55,14 @@ class AnimatedButton(tk.Button):
         if self['state'] == 'normal':
             self.configure(image=self.icon2)
             if self.hover_text is not None:
-                self.master.master.hover_box.configure(
+                cetus.hover_box.configure(
                     text=self.hover_text)
 
     def on_leave(self, event):
         """Altera o ícone do botão quando o cursor saí da sua área."""
         if self['state'] == 'normal':
             self.configure(image=self.icon1)
-            self.master.master.hover_box.configure(
+            cetus.hover_box.configure(
                 text=std.hover_texts['default'])
 
 
@@ -210,74 +209,11 @@ class BaseWindow(tk.Tk):
         self._frame = None
         self.geometry('1050x660+200+10')
         self.resizable(False, False)
-
-        self.switch_frame(CetusWindow)
-        self.connected_icon = tk.PhotoImage(file='assets/connected_icon.png')
-        self.check_if_is_connected()
-        self.experiment_thread = None
-
-    def switch_frame(self, new_frame, *args, **kwargs):
-        """Função para trocar o conteúdo exibido pela na janela.
-
-        :param new_frame: nova classe ou subclasse da tk.Frame a ser
-        exibida.
-        """
-
-        new_frame = new_frame(self, *args, **kwargs)
-        if self._frame is not None:
-            self._frame.destroy()
-        self._frame = new_frame
-        self._frame.pack()
-        self._frame.create_widgets()
-
-    def check_if_is_connected(self):
-        """Função para verificar alterações na porta serial.
-
-        Essa função roda em looping infinito no background da janela
-        base.
-        """
-        bt_connected = self._frame.side_buttons['reconnect_icon']
-        if self._frame is not None and arduino.is_connected:
-            bt_connected.icon1 = self.connected_icon
-            bt_connected.icon2 = self.connected_icon
-            bt_connected.configure(image=self.connected_icon)
-        elif arduino.waiting_update:
-            bt_connected.icon1 = tk.PhotoImage(
-                file=std.side_buttons_path['reconnect_icon'])
-            bt_connected.icon2 = tk.PhotoImage(
-                file=std.side_buttons_path['reconnect_highlight'])
-            bt_connected.configure(image=bt_connected.icon1)
-            arduino.waiting_update = False
-        self.after(1000, self.check_if_is_connected)
-
-
-class CetusWindow(tk.Frame):
-    """Primeira janela do aplicativo.
-
-    Nessa janela o usuário pode selecionar, deletar ou criar um
-    experimento.
-    """
-
-    def __init__(self, master: BaseWindow):
-        # Configurações da janela master.
-        super().__init__(master,
-                         bg=std.BG,
-                         bd=0)
-        self.master = master
-        self.master.title('Cetus PCR')
-        self.master.iconbitmap(std.WINDOW_ICON)
-        self.master.protocol('WM_DELETE_WINDOW', self.close_window)
-        self.pack(expand=1, fill='both')
-        self.pack_propagate(False)
-        self.master.focus_force()
-
-        self.create_widgets = self._widgets
-
-        self.logo = tk.PhotoImage(file=std.LOGO_IMAGE_PATH)
-        self.logo_bg = tk.Label(master=self,
-                                image=self.logo,
-                                bg=std.BG)
-        self.logo_bg.place(x=550, y=200)
+        self.title('Cetus PCR')
+        self.iconbitmap(std.WINDOW_ICON)
+        self.protocol('WM_DELETE_WINDOW', self.close_window)
+        self.configure(bg=std.BG)
+        self.focus_force()
 
         # Barra inferior para exibir informações sobre os botões.
         self.hover_box = tk.Label(master=self,
@@ -308,6 +244,14 @@ class CetusWindow(tk.Frame):
                                      bg=std.TOP_BAR_COLOR,
                                      image=self.header)
         self.header_label.pack(side='right', padx=10)
+
+        self.title_experiment = tk.Label(master=self.top_bar_frame,
+                                         font=(std.FONT_TITLE, 39, 'bold'),
+                                         fg=std.TEXTS_COLOR,
+                                         bg=std.TOP_BAR_COLOR)
+        self.title_experiment.place(rely=0,
+                                    x=5,
+                                    y=7)
 
         # Criar os botões da barra lateral
         self.side_buttons = {}
@@ -343,6 +287,107 @@ class CetusWindow(tk.Frame):
         self.side_buttons['settings_icon']. \
             configure(command=self.handle_settings_button)
 
+        self.switch_frame(HomeWindow)
+        self.connected_icon = tk.PhotoImage(file='assets/connected_icon.png')
+        self.check_if_is_connected()
+        self.experiment_thread = None
+
+    def switch_frame(self, new_frame, *args, **kwargs):
+        """Função para trocar o conteúdo exibido pela na janela.
+
+        :param new_frame: nova classe ou subclasse da tk.Frame a ser
+        exibida.
+        """
+
+        new_frame = new_frame(self, *args, **kwargs)
+        if self._frame is not None:
+            self._frame.destroy()
+        self._frame = new_frame
+        self._frame.pack()
+        self._frame.create_widgets()
+
+    def check_if_is_connected(self):
+        """Função para verificar alterações na porta serial.
+
+        Essa função roda em looping infinito no background da janela
+        base.
+        """
+        bt_connected = self.side_buttons['reconnect_icon']
+        if self._frame is not None and arduino.is_connected:
+            bt_connected.icon1 = self.connected_icon
+            bt_connected.icon2 = self.connected_icon
+            bt_connected.configure(image=self.connected_icon)
+        elif arduino.waiting_update:
+            bt_connected.icon1 = tk.PhotoImage(
+                file=std.side_buttons_path['reconnect_icon'])
+            bt_connected.icon2 = tk.PhotoImage(
+                file=std.side_buttons_path['reconnect_highlight'])
+            bt_connected.configure(image=bt_connected.icon1)
+            arduino.waiting_update = False
+        self.after(1000, self.check_if_is_connected)
+
+    def close_window(self):
+        """Função para sobrescrever o protocolo padrão ao fechar a janela.
+
+        O programa salva todos os experimentos em arquivo externo e depois
+        destrói a janela principal encerrando o programa.
+        """
+        fc.save_pickle_file(std.EXP_PATH, fc.experiments)
+        if arduino.is_connected:
+            arduino.is_connected = False
+            arduino.serial_device.close()
+            print('Closing serial port.')
+        self.destroy()
+
+    @staticmethod
+    def handle_info_button():
+        if not InfoWindow.is_open:
+            InfoWindow(tk.Tk())
+
+    @staticmethod
+    def handle_reconnect_button():
+        if not arduino.is_connected:
+            arduino.initialize_connection()
+            port = arduino.port_connected
+            if arduino.is_connected:
+                messagebox.showinfo('Cetus PCR',
+                                    'Dispositivo conectado com sucesso na '
+                                    f'porta "{port}"')
+            else:
+                messagebox.showerror('Cetus PCR',
+                                     'Conexão mal-sucedida.')
+        else:
+            messagebox.showinfo('Cetus PCR',
+                                'O Dispositivo já está conectado '
+                                f'({arduino.port_connected}).')
+
+    # Ainda não implementado.
+    def handle_settings_button(self):
+        pass
+
+    def handle_home_button(self):
+        self.title_experiment.configure(text='')
+        self.switch_frame(HomeWindow)
+
+
+class HomeWindow(tk.Frame):
+    """Primeira janela do aplicativo.
+
+    Nessa janela o usuário pode selecionar, deletar ou criar um
+    experimento.
+    """
+
+    def __init__(self, master: BaseWindow):
+        # Configurações da janela master.
+        super().__init__(master,
+                         bg=std.BG,
+                         bd=0)
+        self.master = master
+        self.pack(expand=1, fill='both')
+        self.pack_propagate(False)
+
+        self.create_widgets = self._widgets
+
     def _widgets(self):
         """Cria os widgets específicos da janela.
 
@@ -350,6 +395,11 @@ class CetusWindow(tk.Frame):
         herdados pelas outras janelas. O método é sobrescrito em cada
         nova sub-classe.
         """
+        self.logo = tk.PhotoImage(file=std.LOGO_IMAGE_PATH)
+        self.logo_bg = tk.Label(master=self,
+                                image=self.logo,
+                                bg=std.BG)
+        self.logo_bg.place(x=550, y=200)
 
         self.buttons_frame = tk.Frame(master=self,
                                       width=850,
@@ -359,9 +409,10 @@ class CetusWindow(tk.Frame):
                                       highlightcolor=std.BD,
                                       highlightbackground=std.BD,
                                       highlightthickness=std.BD_WIDTH)
-        self.buttons_frame.place(rely=0.50,
-                                 relx=0.10,
-                                 anchor='w')
+        self.buttons_frame.place(anchor='n',
+                                 rely=0.30,
+                                 relx=0.5,
+                                 y=35)
         self.buttons_frame.pack_propagate(False)
 
         self.buttons = {}
@@ -424,40 +475,6 @@ class CetusWindow(tk.Frame):
             values.append(exp.name)
         self.experiment_combo.configure(values=values)
 
-    def handle_home_button(self):
-        self.master.index_exp = None
-        self.master.switch_frame(CetusWindow)
-
-    @staticmethod
-    def handle_info_button():
-        if not InfoWindow.is_open:
-            InfoWindow(tk.Tk())
-
-    # Ainda não implementado.
-    def handle_cooling_button(self):
-        pass
-
-    @staticmethod
-    def handle_reconnect_button():
-        if not arduino.is_connected:
-            arduino.initialize_connection()
-            port = arduino.port_connected
-            if arduino.is_connected:
-                messagebox.showinfo('Cetus PCR',
-                                    'Dispositivo conectado com sucesso na '
-                                    f'porta "{port}"')
-            else:
-                messagebox.showerror('Cetus PCR',
-                                     'Conexão mal-sucedida.')
-        else:
-            messagebox.showinfo('Cetus PCR',
-                                'O Dispositivo já está conectado '
-                                f'({arduino.port_connected}).')
-
-    # Ainda não implementado.
-    def handle_settings_button(self):
-        pass
-
     def handle_confirm_button(self):
         index = self.experiment_combo.current()
         if index >= 0:
@@ -496,21 +513,8 @@ class CetusWindow(tk.Frame):
                 self.show_experiments()
                 self.experiment_combo.delete(0, 'end')
 
-    def close_window(self):
-        """Função para sobrescrever o protocolo padrão ao fechar a janela.
 
-        O programa salva todos os experimentos em arquivo externo e depois
-        destrói a janela principal encerrando o programa.
-        """
-        fc.save_pickle_file(std.EXP_PATH, fc.experiments)
-        if arduino.is_connected:
-            arduino.is_connected = False
-            arduino.serial_device.close()
-            print('Closing serial port.')
-        self.master.destroy()
-
-
-class ExperimentWindow(CetusWindow):
+class ExperimentWindow(HomeWindow):
     """Lida com o experimento dado pela janela CetusPCR.
 
     Essa janela é composto por alguns widgets da classe tk.Entry.
@@ -530,16 +534,8 @@ class ExperimentWindow(CetusWindow):
         self.vcmd = self.master.register(fc.validate_entry)
         self.experiment: fc.ExperimentPCR = fc.experiments[exp_index]
         arduino.experiment = self.experiment
-        self.logo_bg.place_forget()
         self.step_widgets_data = []
-        self.title = tk.Label(master=self,
-                              font=(std.FONT_TITLE, 39, 'bold'),
-                              fg=std.TEXTS_COLOR,
-                              bg=std.TOP_BAR_COLOR,
-                              text=self.experiment.name)
-        self.title.place(rely=0,
-                         x=80,
-                         y=10)
+        cetus.title_experiment.configure(text=self.experiment.name)
 
     def _widgets(self):
         self.entry_of_options = {}
@@ -556,7 +552,7 @@ class ExperimentWindow(CetusWindow):
                              validate='key',
                              validatecommand=(self.vcmd, '%P'))
             entry.place(relx=0.7,
-                        rely=0.2,
+                        rely=0.1,
                         y=self.gapy)
             self.gapy += 120
             self.entry_of_options[key] = entry
@@ -586,8 +582,7 @@ class ExperimentWindow(CetusWindow):
                                        bd=0,
                                        highlightthickness=0)
         self.frame_steps.place(relx=0.1,
-                               rely=0.2,
-                               x=50)
+                               rely=0.1)
         for step in ('Desnaturação', 'Anelamento', 'Extensão'):
             self.new_step = StepWidget(master=self.frame_steps.viewPort,
                                        step_name=step)
@@ -687,13 +682,14 @@ class ExperimentWindow(CetusWindow):
 
     def handle_back_button(self):
         self.master.index_exp = None
-        self.master.switch_frame(CetusWindow)
+        self.master.switch_frame(HomeWindow)
 
     def handle_run_button(self):
         if arduino.is_connected:
             self.save_experiment()
             arduino.is_running = True
-            self.master.experiment_thread = Thread(target=arduino.run_experiment)
+            self.master.experiment_thread = Thread(
+                target=arduino.run_experiment)
             self.master.experiment_thread.start()
             self.master.switch_frame(MonitorWindow, self.exp_index)
 
@@ -713,7 +709,7 @@ class MonitorWindow(ExperimentWindow):
 
     def _widgets(self):
         self.data = {}
-        gapx, gapy = 0, 0
+        gapx, gapy = 20, 0
         line1 = ['Temperatura Amostra', 'Temperatura Alvo', 'Ciclo Atual']
         line2 = ['Temperatura Tampa', 'Tempo Decorrido', 'Passo Atual']
         for label1, label2 in zip(line1, line2):
@@ -722,8 +718,8 @@ class MonitorWindow(ExperimentWindow):
                                   bg=std.BG,
                                   fg=std.TEXTS_COLOR,
                                   font=(std.FONT_TITLE, 20, 'bold'))
-            new_label1.place(relx=0.1,
-                             rely=0.2,
+            new_label1.place(relx=0.0,
+                             rely=0.1,
                              x=gapx)
             new_value1 = tk.Label(master=self,
                                   font=(std.FONT_TITLE, 30, 'bold'),
@@ -759,14 +755,14 @@ class MonitorWindow(ExperimentWindow):
             gapx += 360
             gapy = 0
 
-        self.frame1 = tk.Frame(master=self)
-        self.frame1.place(relx=0.9,
-                          rely=0.8,
-                          x=-30,
-                          y=15,
-                          anchor='center')
+        # self.frame1 = tk.Frame(master=self)
+        # self.frame1.place(relx=0.9,
+        #                   rely=0.8,
+        #                   x=-30,
+        #                   y=15,
+        #                   anchor='center')
 
-        self.cancel_button = AnimatedButton(master=self.frame1,
+        self.cancel_button = AnimatedButton(master=self,
                                             relief=std.RELIEF,
                                             command=self.handle_cancel_button,
                                             image1=std.cetuspcr_buttons_path[
@@ -781,7 +777,11 @@ class MonitorWindow(ExperimentWindow):
                                             bg=std.BG,
                                             highlightthickness=0)
 
-        self.cancel_button.pack()
+        self.cancel_button.place(relx=0.8,
+                                 rely=0.8,
+                                 x=45,
+                                 y=-10,
+                                 anchor='center')
         self.update_labels()
 
     def update_labels(self):
@@ -814,7 +814,7 @@ class InfoWindow(tk.Frame):
     def __init__(self, master: tk.Tk):
         super().__init__(master)
         self.master = master
-        self.master.title('Cetus PCR')
+        self.master.title_experiment('Cetus PCR')
         self.master.iconbitmap(std.WINDOW_ICON)
         self.master.protocol('WM_DELETE_WINDOW', self.close_window)
         InfoWindow.is_open = True
@@ -833,8 +833,11 @@ class InfoWindow(tk.Frame):
         self.pack(expand=1,
                   fill='both')
 
-        # O mestre de todos os outros widgets deve ser o self.main_frame
-
     def close_window(self):
         InfoWindow.is_open = False
         self.master.destroy()
+
+
+cetus = BaseWindow()
+fc.experiments = fc.open_pickle_file(std.EXP_PATH)
+cetus.mainloop()
