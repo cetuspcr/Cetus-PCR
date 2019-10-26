@@ -83,7 +83,7 @@ COLORS = ['snow', 'ghost white', 'white smoke', 'gainsboro', 'floral white', 'ol
     'gray93', 'gray94', 'gray95', 'gray97', 'gray98', 'gray99']
 
 root = Tk()
-root.title("Named colour chart")
+root.title_experiment("Named colour chart")
 row = 0
 col = 0
 for color in COLORS:

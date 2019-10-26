@@ -22,8 +22,8 @@ class ExperimentPCR:
     classe StepPCR.
     """
 
-    def __init__(self, name, n_cycles=0, final_hold=0, *steps):
-        self.name = name
+    def __init__(self, name: str, n_cycles=0, final_hold=0, *steps):
+        self.name = name.capitalize()
         self.n_cycles = n_cycles
         self.final_hold = final_hold
         self.steps = list(steps)
@@ -109,8 +109,8 @@ class ArduinoPCR:
         for i in range(int(self.experiment.n_cycles)):
             self.current_cycle = i + 1
             for step in self.experiment.steps:
+                self.pid.reset()
                 started_step_time = time()
-
                 self.current_step = step.name
                 self.current_step_temp = step.temperature
                 set_point = int(step.temperature)
