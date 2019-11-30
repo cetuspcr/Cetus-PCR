@@ -1,3 +1,4 @@
+from datetime import datetime
 import pickle
 from threading import Thread
 from time import sleep, time
@@ -11,6 +12,9 @@ import constants as std
 
 experiments = []
 
+experiment_data_x = []
+experiment_data_y = []
+experiment_data_setpoint = []
 
 class ExperimentPCR:
     """Um objeto que contêm todas as informações de temperatura e tempo dos
@@ -27,28 +31,28 @@ class ExperimentPCR:
         self.n_cycles = n_cycles
         self.final_hold = final_hold
         self.steps = list(steps)
-        self._update_estimated_time()
 
     def __str__(self):
         str_steps = ''
         for step in self.steps:
             str_steps += f'-{str(step)}\n'
         final_str = f'\nNome do Experimento: "{self.name}"\n' \
-            f'->Nº de ciclos: {self.n_cycles}\n' \
-            f'->Temperatura Final: {self.final_hold}°C\n' \
-            f'{str_steps}'
+                    f'->Nº de ciclos: {self.n_cycles}\n' \
+                    f'->Temperatura Final: {self.final_hold}°C\n' \
+                    f'{str_steps}'
         return final_str
 
     def add_step(self, name, temp, duration):
         new_step = StepPCR(name, temp, duration)
         self.steps.append(new_step)
-        self._update_estimated_time()
 
-    def _update_estimated_time(self):
-        self.estimated_time = 0
+    @property
+    def estimated_time(self):
+        value = 0
         for step in self.steps:
-            self.estimated_time += int(step.duration)
-        self.estimated_time *= int(self.n_cycles)
+            value += int(step.duration)
+        value *= int(self.n_cycles)
+        return value
 
 
 class StepPCR:
@@ -62,19 +66,25 @@ class StepPCR:
 
     def __str__(self):
         return f'Passo de PCR "{self.name}": ' \
-            f'{self.temperature}°C, {self.duration}s'
+               f'{self.temperature}°C, {self.duration}s'
 
 
 class ArduinoPCR:
     """Classe com protocolos para comunicação serial."""
 
-    def __init__(self, baudrate, timeout,
-                 experiment: ExperimentPCR = None):
+    def __init__(self, baudrate, timeout=1, experiment: ExperimentPCR = None):
         self.timeout = timeout
         self.baudrate = baudrate
         self.experiment: ExperimentPCR = experiment
-        self.pid = PID(Kp=3, Ki=0, Kd=0,
+        self.cooling_experiment = ExperimentPCR('Resfriamento', 1, 25,
+                                                StepPCR('1',
+                                                        std.COOLING_TEMP_C,
+                                                        5))
+        self.pid = PID(Kp=std.KP,
+                       Ki=std.KI,
+                       Kd=std.KD,
                        output_limits=(-255, 255), sample_time=0)
+        # print(self.pid.tunings)
 
         # Conferir com o nome no Gerenciador de dispositivos do windows
         # caso esteja usando um arduino diferente.
@@ -93,7 +103,10 @@ class ArduinoPCR:
         self.current_step = ''
         self.current_step_temp = 0
         self.current_cycle = 0
+
         self.elapsed_time = 0
+
+        self.is_cooling = False
 
         self.reading = ''
 
@@ -102,6 +115,7 @@ class ArduinoPCR:
     def run_experiment(self):
         sleep(1)
         started_time = time()
+        self.elapsed_time = 0
         for step in self.experiment.steps:
             self.elapsed_time += int(step.duration)
         self.elapsed_time *= self.experiment.n_cycles
@@ -117,28 +131,55 @@ class ArduinoPCR:
                 duration = int(step.duration)
                 self.pid.setpoint = set_point
 
-                while time() - started_step_time <= duration:
-                    if not self.is_running:
-                        print('Experiment Cancelled')
-                        messagebox.showinfo('Cetus PCR', 'O experimento foi '
-                                                         'cancelado.')
-                        self.serial_device.write(b'<printTemps 0>')
-                        return
-                    elif self.is_waiting:
+                current_time = time()
+                while current_time - started_step_time <= duration:
+                    if self.is_waiting:
+                        if not self.is_running:
+                            # print('Experiment Cancelled')
+                            messagebox.showinfo('Cetus PCR',
+                                                'O experimento foi '
+                                                'cancelado.')
+                            self.serial_device.write(b'<peltier 0 0>')
+                            self.is_waiting = False
+                            return
+
                         output = self.pid(self.current_sample_temperature)
-                        if output > 0:
-                            # Surgiu a necessidade de inverter o valor que
-                            # era mandado para o arduino, por conta da ponte H
-                            # funcionar com uma lógica invertida
-                            rv = f'<peltier 0 {~int(output) + 256:03}>'
+                        print(f'output= {output}')
+                        # print(self.current_sample_temperature)
+                        if output >= 0:
+                            new_str = f'<peltier 0 {int(output)}>'
                         elif output < 0:
-                            rv = f'<peltier 1 {~int(abs(output)) + 256:03}>'
-                        self.serial_device.write(b'%a\r\n' % rv)
+                            new_str = f'<peltier 1 {abs(int(output))}>'
+                        self.serial_device.write(b'%a\r\n' % new_str)
                         self.is_waiting = False
                         self.elapsed_time = int(time() - started_time)
 
+                    if not set_point - std.TOLERANCE < \
+                            self.current_sample_temperature < \
+                            set_point + std.TOLERANCE:
+                        # Delay para atingir a temperatura desejada
+                        difference = time() - current_time
+                        duration += difference
+                        # print(duration)
+
+                    experiment_data_x.append(current_time - started_time)
+                    experiment_data_y.append(self.current_sample_temperature)
+                    experiment_data_setpoint.append(self.pid.setpoint)
+
+                    current_time = time()
+                    sleep(0.1)
+
+        self.is_cooling = False
         print(f'Finish time: {time() - started_time}')
-        self.serial_device.write(b'<printTemps 0>')
+        file_path = f'{self.experiment.name} - {datetime.now():%d%m%y%H%M%S}'
+        with open(f'experiment logs/{file_path}.csv', 'w') as outfile:
+            outfile.write('X,Y,Set Point\n')
+            for x, y, sp in zip(experiment_data_x, experiment_data_y,
+                                experiment_data_setpoint):
+                outfile.write(f'{x},{y},{sp}\n')
+
+        messagebox.showinfo('Cetus PCR', f'"{self.experiment.name}" '
+                                         f'concluído.')
 
     def serial_monitor(self):
         """Função para monitoramento da porta serial do Arduino.
@@ -159,13 +200,25 @@ class ArduinoPCR:
                 if 'tempSample' in self.reading:
                     self.current_sample_temperature = \
                         float(self.reading.split()[1])
+                    # print(self.current_sample_temperature)
                 if 'tempLid' in self.reading:
                     self.current_lid_temperature = \
                         float(self.reading.split()[1])
+
+                if 'Cooling finished' in self.reading:
+                    messagebox.showinfo('Cetus PCR', 'Rotina de resfriamento '
+                                                     'concluída.')
                 elif self.reading == 'nextpls':
                     self.is_waiting = True
-                if self.reading != '':
-                    print(repr(f'(SM) {self.reading}'))
+
+                if 'Heat' in self.reading or 'Cooling' in self.reading:
+                    print(f'(SM) {repr(self.reading)}')
+
+                # if not self.is_running:
+                    # self.serial_device.write(b'<peltier 0 0>')
+
+                # if self.reading != '':
+                #     print(f'(SM) {repr(self.reading)}')
 
             except serial.SerialException:
                 messagebox.showerror('Dispositivo desconectado',

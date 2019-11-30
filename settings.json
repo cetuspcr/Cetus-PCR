@@ -1,0 +1,7 @@
+{
+  "COOLING_TEMP_C": 30,
+  "KP": 100,
+  "KI": 0,
+  "KD": 0,
+  "TOLERANCE": 3
+}

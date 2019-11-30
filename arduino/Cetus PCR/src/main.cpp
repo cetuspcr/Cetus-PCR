@@ -1,9 +1,11 @@
 #include "serialtools.h"
 
+
 void setup(){
     Serial.begin(9600);
-    startup();
+    initializePins();
 }
+
 
 void loop(){
     recieveCommand();

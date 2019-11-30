@@ -2,14 +2,14 @@
 de Windows independente. Um instalador pode ser gerado posteriormente
 usando o Inno Setup.
 
-A pasta "assets" contém todos os arquivos adicionais para o programa
+   A pasta "assets" contém todos os arquivos adicionais para o programa
 tais como ícones e DLL necessárias.
 
-Para a gerar os arquivos necessários, abra o prompt de comando e navegue
+   Para a gerar os arquivos necessários, abra o prompt de comando e navegue
 para a pasta raiz do projeto e execute o seguinte comando:
 'python setup.py build'
 
-Requer cx_Freeze e Python 3.7 no PATH do sistema.
+   Requer cx_Freeze instalada e Python 3.7 no PATH do sistema.
 """
 
 import os
@@ -20,8 +20,8 @@ os.environ['TCL_LIBRARY'] = r'C:\Users\WILSONCAZARRESOUSA\AppData\Local\Programs
 os.environ['TK_LIBRARY'] = r'C:\Users\WILSONCAZARRESOUSA\AppData\Local\Programs\Python\Python37-32\tcl\tk8.6'
 
 executables = [Executable('Cetus PCR.py',
-                          base='Win32GUI',
-                          icon='assets/cetus.ico'),
+                          icon='assets/cetus.ico',
+                          base='Win32GUI'),
                Executable('functions.py', base='Win32GUI'),
                Executable('interface.py', base='Win32GUI')]
 
@@ -30,5 +30,9 @@ setup(name='Cetus PCR',
       description='Interface para o Cetus PCR',
       executables=executables,
       options={'build_exe': {'includes': ['tkinter', 'serial'],
-                             'include_files': ['assets/'],
+                             'include_files': ['assets/',
+                                               'assets/tcl86t.dll',
+                                               'assets/tk86t.dll',
+                                               'settings.json',
+                                               'experiment logs/'],
                              'include_msvcr': True, }})

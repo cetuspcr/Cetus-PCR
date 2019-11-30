@@ -19,11 +19,10 @@ Todos os métodos com prefixo "handle" remetem as funções de botões.
 import tkinter as tk
 from threading import Thread
 from tkinter import ttk, messagebox
+from time import sleep
 
-import constants as std
 import functions as fc
-
-arduino = fc.ArduinoPCR(baudrate=9600, timeout=1)
+import constants as std
 
 
 class AnimatedButton(tk.Button):
@@ -179,6 +178,13 @@ class StepWidget(tk.Frame):
         self.remove_button.pack(side='left', padx=15)
         StepWidget.n_steps += 1
 
+    @classmethod
+    def create_from_step_class(cls, master, step: fc.StepPCR):
+        new_widget = cls(master=master, step_name=step.name)
+        new_widget.entry_temp.insert(0, step.temperature)
+        new_widget.entry_time.insert(0, step.duration)
+        return new_widget
+
     def get_step(self):
         return fc.StepPCR(self.step_name, self.entry_temp.get(),
                           self.entry_time.get())
@@ -188,13 +194,6 @@ class StepWidget(tk.Frame):
         StepWidget.n_steps -= 1
         self.forget()
         self.master.master.master.update_scroll_bar()
-
-    @classmethod
-    def create_from_step_class(cls, master, step: fc.StepPCR):
-        new_widget = cls(master=master, step_name=step.name)
-        new_widget.entry_temp.insert(0, step.temperature)
-        new_widget.entry_time.insert(0, step.duration)
-        return new_widget
 
 
 class BaseWindow(tk.Tk):
@@ -264,8 +263,10 @@ class BaseWindow(tk.Tk):
                 self.new_button = AnimatedButton(master=self.side_bar_frame,
                                                  image1=self.path1,
                                                  image2=self.path2,
-                                                 width=self.side_bar_width + 10,
-                                                 activebackground=std.SIDE_BAR_COLOR,
+                                                 width=
+                                                 self.side_bar_width + 10,
+                                                 activebackground=
+                                                 std.SIDE_BAR_COLOR,
                                                  bd=0,
                                                  bg=std.SIDE_BAR_COLOR,
                                                  hover_text=std.hover_texts[
@@ -280,8 +281,8 @@ class BaseWindow(tk.Tk):
             configure(command=self.handle_home_button)
         self.side_buttons['info_icon']. \
             configure(command=self.handle_info_button)
-        # self.side_buttons['cooling_icon']. \
-        #     configure(command=self.handle_cooling_button)
+        self.side_buttons['cooling_icon']. \
+            configure(command=self.handle_cooling_button)
         self.side_buttons['reconnect_icon']. \
             configure(command=self.handle_reconnect_button)
         self.side_buttons['settings_icon']. \
@@ -291,20 +292,6 @@ class BaseWindow(tk.Tk):
         self.connected_icon = tk.PhotoImage(file='assets/connected_icon.png')
         self.check_if_is_connected()
         self.experiment_thread = None
-
-    def switch_frame(self, new_frame, *args, **kwargs):
-        """Função para trocar o conteúdo exibido pela na janela.
-
-        :param new_frame: nova classe ou subclasse da tk.Frame a ser
-        exibida.
-        """
-
-        new_frame = new_frame(self, *args, **kwargs)
-        if self._frame is not None:
-            self._frame.destroy()
-        self._frame = new_frame
-        self._frame.pack()
-        self._frame.create_widgets()
 
     def check_if_is_connected(self):
         """Função para verificar alterações na porta serial.
@@ -324,6 +311,7 @@ class BaseWindow(tk.Tk):
                 file=std.side_buttons_path['reconnect_highlight'])
             bt_connected.configure(image=bt_connected.icon1)
             arduino.waiting_update = False
+
         self.after(1000, self.check_if_is_connected)
 
     def close_window(self):
@@ -334,10 +322,52 @@ class BaseWindow(tk.Tk):
         """
         fc.save_pickle_file(std.EXP_PATH, fc.experiments)
         if arduino.is_connected:
+            arduino.is_running = False
             arduino.is_connected = False
             arduino.serial_device.close()
             print('Closing serial port.')
         self.destroy()
+
+    def switch_frame(self, new_frame, *args, **kwargs):
+        """Função para trocar o conteúdo exibido pela na janela.
+
+        :param new_frame: nova classe ou subclasse da tk.Frame a ser
+        exibida.
+        """
+
+        new_frame = new_frame(self, *args, **kwargs)
+        if self._frame is not None:
+            self._frame.destroy()
+        self._frame = new_frame
+        self._frame.pack()
+        self._frame.create_widgets()
+
+    # ---------------------------------- Métodos para funções de botão
+    def handle_cooling_button(self):
+        if not arduino.is_cooling:
+            print('cooling')
+            arduino.serial_device.write(b'<peltier 0 0>')
+            sleep(1)
+            if arduino.current_sample_temperature >= std.COOLING_TEMP_C:
+                arduino.experiment = arduino.cooling_experiment
+                arduino.is_cooling = True
+                arduino.is_running = True
+                self.experiment_thread = Thread(
+                    target=arduino.run_experiment)
+                self.experiment_thread.start()
+                messagebox.showinfo('Cetus PCR', 'Processo de resfriamento '
+                                                 'iniciado.')
+            else:
+                messagebox.showinfo('Cetus PCR', 'O Dispositivo já está resfriado.')
+        else:
+            arduino.serial_device.write(b'<printTemps>')
+            messagebox.showinfo('Cetus PCR',
+                                'Dispositivo resfriando.\n'
+                                f'Temperatura atual: {arduino.current_sample_temperature}')
+
+    def handle_home_button(self):
+        self.title_experiment.configure(text='')
+        self.switch_frame(HomeWindow)
 
     @staticmethod
     def handle_info_button():
@@ -361,13 +391,8 @@ class BaseWindow(tk.Tk):
                                 'O Dispositivo já está conectado '
                                 f'({arduino.port_connected}).')
 
-    # Ainda não implementado.
     def handle_settings_button(self):
         pass
-
-    def handle_home_button(self):
-        self.title_experiment.configure(text='')
-        self.switch_frame(HomeWindow)
 
 
 class HomeWindow(tk.Frame):
@@ -475,6 +500,7 @@ class HomeWindow(tk.Frame):
             values.append(exp.name)
         self.experiment_combo.configure(values=values)
 
+    # ---------------------------------- Métodos para funções de botão
     def handle_confirm_button(self):
         index = self.experiment_combo.current()
         if index >= 0:
@@ -485,9 +511,9 @@ class HomeWindow(tk.Frame):
         name = fc.ask_string('Novo Experimento', 'Digite o nome do'
                                                  ' experimento:',
                              parent=self.master)
-        new_experiment = fc.ExperimentPCR(name)
 
-        if new_experiment.name != '' and new_experiment.name is not None:
+        if name != '' and name is not None:
+            new_experiment = fc.ExperimentPCR(name)
             fc.experiments.append(new_experiment)
             fc.save_pickle_file(std.EXP_PATH, fc.experiments)
             index_exp = fc.experiments.index(new_experiment)
@@ -662,6 +688,7 @@ class ExperimentWindow(HomeWindow):
         fc.save_pickle_file(std.EXP_PATH, fc.experiments)
         print(self.experiment)
 
+    # ---------------------------------- Métodos para funções de botão
     def handle_add_button(self):
         step_name = fc.ask_string('Nova Etapa', 'Digite o nome do novo '
                                                 'passo:')
@@ -700,6 +727,7 @@ class ExperimentWindow(HomeWindow):
 
 
 class MonitorWindow(ExperimentWindow):
+
     def __init__(self, master: BaseWindow, exp_index):
         fc.experiments = fc.open_pickle_file(std.EXP_PATH)
         super().__init__(master, exp_index)
@@ -711,8 +739,8 @@ class MonitorWindow(ExperimentWindow):
         self.data = {}
         gapx, gapy = 20, 0
         line1 = ['Temperatura Amostra', 'Temperatura Alvo', 'Ciclo Atual']
-        line2 = ['Temperatura Tampa', 'Tempo Decorrido', 'Passo Atual']
-        for label1, label2 in zip(line1, line2):
+        line2 = ['Tempo Decorrido', 'Passo Atual']
+        for label1 in line1:
             new_label1 = tk.Label(master=self,
                                   text=label1,
                                   bg=std.BG,
@@ -732,16 +760,19 @@ class MonitorWindow(ExperimentWindow):
                              relx=0.5)
             self.data[label1.lower()] = new_value1
 
-            gapy += 200
+            gapx += 360
+
+        gapx = 20
+        for label2 in line2:
             new_label2 = tk.Label(master=self,
                                   text=label2,
                                   bg=std.BG,
                                   fg=std.TEXTS_COLOR,
                                   font=(std.FONT_TITLE, 20, 'bold'))
-            new_label2.place(in_=new_label1,
-                             relx=0.5,
+            new_label2.place(rely=0.5,
                              anchor='n',
-                             y=gapy)
+                             relx=0.3,
+                             x=gapx)
             new_value2 = tk.Label(master=self.master,
                                   font=(std.FONT_TITLE, 30, 'bold'),
                                   bg=std.BG,
@@ -753,7 +784,6 @@ class MonitorWindow(ExperimentWindow):
                              relx=0.5)
             self.data[label2.lower()] = new_value2
             gapx += 360
-            gapy = 0
 
         # self.frame1 = tk.Frame(master=self)
         # self.frame1.place(relx=0.9,
@@ -787,11 +817,11 @@ class MonitorWindow(ExperimentWindow):
     def update_labels(self):
         cur_cycle = f'{arduino.current_cycle}/{self.experiment.n_cycles}'
         self.data['temperatura amostra']. \
-            configure(text=f'{arduino.current_sample_temperature}°C')
-        self.data['temperatura tampa']. \
-            configure(text=f'{arduino.current_lid_temperature}°C')
+            configure(text=f'{arduino.current_sample_temperature} °C')
+        # self.data['temperatura tampa']. \
+        #     configure(text=f'{arduino.current_lid_temperature} °C')
         self.data['temperatura alvo']. \
-            configure(text=f'{arduino.current_step_temp}°C')
+            configure(text=f'{arduino.current_step_temp} °C')
         self.data['tempo decorrido']. \
             configure(text=fc.seconds_to_string(arduino.elapsed_time))
         self.data['passo atual']. \
@@ -801,6 +831,7 @@ class MonitorWindow(ExperimentWindow):
             configure(text=cur_cycle)
         self.after(50, self.update_labels)
 
+    # ---------------------------------- Métodos para funções de botão
     def handle_cancel_button(self):
         arduino.is_running = False
         arduino.elapsed_time = 0
@@ -814,7 +845,7 @@ class InfoWindow(tk.Frame):
     def __init__(self, master: tk.Tk):
         super().__init__(master)
         self.master = master
-        self.master.title_experiment('Cetus PCR')
+        self.master.title('Cetus PCR')
         self.master.iconbitmap(std.WINDOW_ICON)
         self.master.protocol('WM_DELETE_WINDOW', self.close_window)
         InfoWindow.is_open = True
@@ -838,6 +869,7 @@ class InfoWindow(tk.Frame):
         self.master.destroy()
 
 
-cetus = BaseWindow()
+arduino = fc.ArduinoPCR(baudrate=9600, timeout=1)
 fc.experiments = fc.open_pickle_file(std.EXP_PATH)
+cetus = BaseWindow()
 cetus.mainloop()
