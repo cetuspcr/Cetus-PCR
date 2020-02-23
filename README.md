@@ -1,14 +1,12 @@
 # Cetus PCR
 <img src="https://github.com/CetusPCR/cetuspcr.github.io/blob/master/images/cetus.png?raw=true" alt="logo do projeto Cetus - o simbolo de sua constelação" width="800" height="450">
 
-_Esse projeto se encontra nos seus estados mais iniciais de desenvolvimento._
-
-O Projeto Cetus tem como proposta desenvolver uma máquina PCR de baixo custo (também chamado de Termociclador). A elaboração está sendo feita por alunos do 3° Mecatrônica Integrado ao Ensino Médio da ETEC Presidente Vargas como proposta para o Trabalho de Conclusão de Curso (TCC).
+O Projeto Cetus tem como proposta desenvolver uma máquina PCR de baixo custo (também chamado de Termociclador). A elaboração foi feita por alunos do 3° Mecatrônica Integrado ao Ensino Médio da ETEC Presidente Vargas como proposta para o Trabalho de Conclusão de Curso (TCC).
 
 ### Contribuidores do Projeto
 Todos os integrantes do nosso grupo são participantes do 3° ano de Mecatrônica (2019) na ETEC Presidente Vargas. 
 
-São eles: Joice Iris, Kleber Kato, Letícia Araújo, Lucas Souza, Vinicius Maehara e Wilson Cazarré.
+São eles: Joice Iris, Lucas Souza, Vinicius Maehara e Wilson Cazarré.
 
 ## Por que Cetus?
 
@@ -23,11 +21,6 @@ PCR (Polymerase Chain Reaction - Reação em Cadeia Polimerase) é uma técnica 
 O objetivo do projeto é auxiliar pequenos grupos de pesquisa, empresas pequenas de biotecnologia e alunos da área a ter acesso a um dispositivo que atualmente possuí um custo extremamente elevado no mercado. Grande parte desse custo está relacionado ao fato de não existir um bom investimento na produção nacional do equipamento, fazendo com que exista um elevado custo de importação.
 
 
-## Toda ajuda é bem-vinda
-
-Por se tratar de um projeto desenvolvido por alunos do ensino médio (com ensino técnico em mecatrônica) estamos necessitados de pessoas com conhecimento principalmente na área da pesquisa em DNA e processos PCR, você pode nos ajudar apenas preenchendo um simples questionário:
-
-[Formulário do Google](https://docs.google.com/forms/d/e/1FAIpQLSeknZwfgxAJlUGq_nTI-9e_KZr4itc3aowXtJQsjgLXp6w6sQ/viewform)
 
 ### Para dúvidas e/ou sugestões sobre o projeto:
 
