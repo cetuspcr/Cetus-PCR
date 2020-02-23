@@ -2,6 +2,7 @@
 <img src="https://github.com/CetusPCR/cetuspcr.github.io/blob/master/images/cetus.png?raw=true" alt="logo do projeto Cetus - o simbolo de sua constelação" width="800" height="450">
 
 O Projeto Cetus tem como proposta desenvolver uma máquina PCR de baixo custo (também chamado de Termociclador). A elaboração foi feita por alunos do 3° Mecatrônica Integrado ao Ensino Médio da ETEC Presidente Vargas como proposta para o Trabalho de Conclusão de Curso (TCC).
+Você pode conferir a documentação final do projeto [aqui](https://github.com/cetuspcr/Cetus-PCR/blob/master/Cetus%20PCR%20-%20Termociclador%20de%20Baixo%20Custo.pdf)
 
 ### Contribuidores do Projeto
 Todos os integrantes do nosso grupo são participantes do 3° ano de Mecatrônica (2019) na ETEC Presidente Vargas. 
